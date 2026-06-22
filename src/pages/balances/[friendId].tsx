@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { DefaultSplitSettings } from '~/components/DefaultSplit/DefaultSplitSettings';
 import { ExpenseList } from '~/components/Expense/ExpenseList';
 import { DeleteFriend } from '~/components/Friend/DeleteFriend';
+import { RenameFriend } from '~/components/Friend/RenameFriend';
 import { Export } from '~/components/Friend/Export';
 import { SettleUp } from '~/components/Friend/Settleup';
 import MainLayout from '~/components/Layout/MainLayout';
@@ -79,6 +80,9 @@ const FriendPage: NextPageWithUser = ({ user }) => {
         }
         actions={
           <div className="flex items-center gap-2">
+            {friendQuery.data && !friendQuery.data.email ? (
+              <RenameFriend friendId={_friendId} currentName={friendQuery.data.name} />
+            ) : null}
             <DeleteFriend friendId={_friendId} disabled={!(0 === balances.data?.length)} />
             <AppDrawer
               title={t('balances.user_preferences.title')}
