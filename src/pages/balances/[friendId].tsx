@@ -80,9 +80,6 @@ const FriendPage: NextPageWithUser = ({ user }) => {
         }
         actions={
           <div className="flex items-center gap-2">
-            {friendQuery.data && !friendQuery.data.email ? (
-              <RenameFriend friendId={_friendId} currentName={friendQuery.data.name} />
-            ) : null}
             <DeleteFriend friendId={_friendId} disabled={!(0 === balances.data?.length)} />
             <AppDrawer
               title={t('balances.user_preferences.title')}
@@ -93,70 +90,84 @@ const FriendPage: NextPageWithUser = ({ user }) => {
               }
             >
               {!friendQuery.data ? null : (
-                <div>
-                  <p className="font-semibold">{t('group_details.group_info.default_split')}</p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <DefaultSplitSettings
-                      participants={[
-                        {
-                          ...user,
-                          emailVerified: null,
-                          name: user.name ?? null,
-                          email: user.email ?? null,
-                          image: user.image ?? null,
-                          obapiProviderId: user.obapiProviderId ?? null,
-                          bankingId: user.bankingId ?? null,
-                          preferredLanguage: user.preferredLanguage ?? '',
-                          hiddenFriendIds: user.hiddenFriendIds ?? [],
-                          currency: user.currency ?? 'USD',
-                          defaultCurrency: user.defaultCurrency ?? null,
-                        },
-                        friendQuery.data,
-                      ]}
-                      defaultSplit={friendQuery.data.defaultSplit}
-                      triggerLabel={t('group_details.group_info.configure_default_split')}
-                      onSave={(defaultSplit) => {
-                        upsertFriendDefaultSplitMutation.mutate(
+                <div className="flex flex-col gap-6">
+                  {!friendQuery.data.email ? (
+                    <div>
+                      <p className="font-semibold">Rename</p>
+                      <div className="mt-2">
+                        <RenameFriend
+                          friendId={_friendId}
+                          currentName={friendQuery.data.name}
+                          onRenamed={() => void friendQuery.refetch()}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                  <div>
+                    <p className="font-semibold">{t('group_details.group_info.default_split')}</p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <DefaultSplitSettings
+                        participants={[
                           {
-                            friendId: friendQuery.data!.id,
-                            defaultSplit,
+                            ...user,
+                            emailVerified: null,
+                            name: user.name ?? null,
+                            email: user.email ?? null,
+                            image: user.image ?? null,
+                            obapiProviderId: user.obapiProviderId ?? null,
+                            bankingId: user.bankingId ?? null,
+                            preferredLanguage: user.preferredLanguage ?? '',
+                            hiddenFriendIds: user.hiddenFriendIds ?? [],
+                            currency: user.currency ?? 'USD',
+                            defaultCurrency: user.defaultCurrency ?? null,
                           },
-                          {
-                            onSuccess: () => {
-                              toast.success(t('balances.default_split.updated'));
-                              void friendQuery.refetch();
+                          friendQuery.data,
+                        ]}
+                        defaultSplit={friendQuery.data.defaultSplit}
+                        triggerLabel={t('group_details.group_info.configure_default_split')}
+                        onSave={(defaultSplit) => {
+                          upsertFriendDefaultSplitMutation.mutate(
+                            {
+                              friendId: friendQuery.data!.id,
+                              defaultSplit,
                             },
-                            onError: () => {
-                              toast.error(t('errors.setting_update_failed'));
+                            {
+                              onSuccess: () => {
+                                toast.success(t('balances.default_split.updated'));
+                                void friendQuery.refetch();
+                              },
+                              onError: () => {
+                                toast.error(t('errors.setting_update_failed'));
+                              },
                             },
-                          },
-                        );
-                      }}
-                    />
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={
-                        !deserializeDefaultSplit(friendQuery.data.defaultSplit) ||
-                        clearFriendDefaultSplitMutation.isPending
-                      }
-                      onClick={() => {
-                        clearFriendDefaultSplitMutation.mutate(
-                          { friendId: friendQuery.data!.id },
-                          {
-                            onSuccess: () => {
-                              toast.success(t('balances.default_split.cleared'));
-                              void friendQuery.refetch();
+                          );
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={
+                          !deserializeDefaultSplit(friendQuery.data.defaultSplit) ||
+                          clearFriendDefaultSplitMutation.isPending
+                        }
+                        onClick={() => {
+                          clearFriendDefaultSplitMutation.mutate(
+                            { friendId: friendQuery.data!.id },
+                            {
+                              onSuccess: () => {
+                                toast.success(t('balances.default_split.cleared'));
+                                void friendQuery.refetch();
+                              },
+                              onError: () => {
+                                toast.error(t('errors.setting_update_failed'));
+                              },
                             },
-                            onError: () => {
-                              toast.error(t('errors.setting_update_failed'));
-                            },
-                          },
-                        );
-                      }}
-                    >
-                      {t('expense_details.clear')}
-                    </Button>
+                          );
+                        }}
+                      >
+                        {t('expense_details.clear')}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}

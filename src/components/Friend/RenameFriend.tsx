@@ -1,4 +1,3 @@
-import { Pencil } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -6,31 +5,19 @@ import { api } from '~/utils/api';
 
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '../ui/alert-dialog';
 
 export const RenameFriend: React.FC<{
   friendId: number;
   currentName: string | null;
-}> = ({ friendId, currentName }) => {
-  const [open, setOpen] = useState(false);
+  onRenamed?: () => void;
+}> = ({ friendId, currentName, onRenamed }) => {
   const [name, setName] = useState(currentName ?? '');
 
-  const utils = api.useUtils();
   const renameFriendMutation = api.user.updateFriendName.useMutation();
 
   const onRename = useCallback(async () => {
     const trimmed = name.trim();
-    if ('' === trimmed) {
+    if ('' === trimmed || trimmed === currentName) {
       return;
     }
 
@@ -42,10 +29,9 @@ export const RenameFriend: React.FC<{
       return;
     }
 
-    utils.user.getFriend.invalidate({ friendId }).catch(console.error);
-    utils.expense.getBalances.invalidate().catch(console.error);
-    setOpen(false);
-  }, [name, friendId, renameFriendMutation, utils]);
+    toast.success('Name updated');
+    onRenamed?.();
+  }, [name, currentName, friendId, renameFriendMutation, onRenamed]);
 
   const handleNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value),
@@ -61,28 +47,15 @@ export const RenameFriend: React.FC<{
   );
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Pencil className="size-4" />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Rename user</AlertDialogTitle>
-          <AlertDialogDescription>Enter a new name for this user.</AlertDialogDescription>
-        </AlertDialogHeader>
-        <Input value={name} onChange={handleNameChange} placeholder="Name" autoFocus />
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleSaveClick}
-            disabled={'' === name.trim() || renameFriendMutation.isPending}
-          >
-            Save
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <div className="flex items-center gap-2">
+      <Input value={name} onChange={handleNameChange} placeholder="Name" />
+      <Button
+        size="sm"
+        onClick={handleSaveClick}
+        disabled={'' === name.trim() || name.trim() === currentName || renameFriendMutation.isPending}
+      >
+        Save
+      </Button>
+    </div>
   );
 };
