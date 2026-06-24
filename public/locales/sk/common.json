@@ -107,6 +107,26 @@
     "setup_instructions": "Inštrukcie na nastavinie dockeru",
     "trouble_logging_in": "Problém s prihlásením? Kontaktujte nás"
   },
+  "balances": {
+    "rename": {
+      "title": "Premenovať",
+      "placeholder": "Meno",
+      "save": "Uložiť",
+      "success": "Meno aktualizované",
+      "error": "Premenovanie zlyhalo"
+    },
+    "merge": {
+      "title": "Zlúčiť s registrovaným účtom",
+      "description": "Ak sa táto osoba medzitým zaregistrovala, zadajte jej email pre prenos všetkých výdavkov na jej účet.",
+      "email_placeholder": "Email registrovaného používateľa",
+      "button": "Zlúčiť účty",
+      "confirm_title": "Ste si istý?",
+      "confirm_description": "Tým sa zlúči {{name}} s registrovaným účtom {{email}}. Všetky výdavky a členstvá v skupinách budú prenesené. Túto akciu nie je možné vrátiť späť.",
+      "confirm_button": "Áno, zlúčiť účty",
+      "success": "Účty boli úspešne zlúčené",
+      "error": "Zlúčenie zlyhalo"
+    }
+  },
   "bank_transactions": {
     "choose_bank_provider": "Vyberte si vašu banku",
     "no_bank_providers_found": "Nenašla sa žiadna banka",

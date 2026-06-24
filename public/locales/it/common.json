@@ -418,5 +418,25 @@
     "show_all_currencies": "Mostra tutte le valute",
     "today": "Oggi",
     "total_balance": "Saldo totale"
+  },
+  "balances": {
+    "rename": {
+      "title": "Rinomina",
+      "placeholder": "Nome",
+      "save": "Salva",
+      "success": "Nome aggiornato",
+      "error": "Errore durante la rinomina"
+    },
+    "merge": {
+      "title": "Unisci con account registrato",
+      "description": "Se questa persona si è nel frattempo registrata, inserisci la sua email per trasferire tutte le spese al suo account.",
+      "email_placeholder": "Email dell'utente registrato",
+      "button": "Unisci account",
+      "confirm_title": "Sei sicuro?",
+      "confirm_description": "Questo unirà {{name}} con l'account registrato {{email}}. Tutte le spese e le appartenenze ai gruppi saranno trasferite. Questa azione non può essere annullata.",
+      "confirm_button": "Sì, unisci account",
+      "success": "Account uniti con successo",
+      "error": "Unione fallita"
+    }
   }
 }

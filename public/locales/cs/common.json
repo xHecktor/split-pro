@@ -413,5 +413,25 @@
     "show_all_currencies": "Zobrazit všechny měny",
     "today": "Dnes",
     "total_balance": "Celkový zůstatek"
+  },
+  "balances": {
+    "rename": {
+      "title": "Přejmenovat",
+      "placeholder": "Jméno",
+      "save": "Uložit",
+      "success": "Jméno aktualizováno",
+      "error": "Přejmenování se nezdařilo"
+    },
+    "merge": {
+      "title": "Sloučit s registrovaným účtem",
+      "description": "Pokud se tato osoba mezitím zaregistrovala, zadejte její email pro přenos všech výdajů na její účet.",
+      "email_placeholder": "Email registrovaného uživatele",
+      "button": "Sloučit účty",
+      "confirm_title": "Jste si jisti?",
+      "confirm_description": "Tím se sloučí {{name}} s registrovaným účtem {{email}}. Všechny výdaje a členství ve skupinách budou přeneseny. Tuto akci nelze vrátit zpět.",
+      "confirm_button": "Ano, sloučit účty",
+      "success": "Účty byly úspěšně sloučeny",
+      "error": "Sloučení se nezdařilo"
+    }
   }
 }

@@ -7,5 +7,25 @@
       },
       "placeholder": "Zgjidhni gjuhën"
     }
+  },
+  "balances": {
+    "rename": {
+      "title": "Riemërtim",
+      "placeholder": "Emri",
+      "save": "Ruaj",
+      "success": "Emri u përditësua",
+      "error": "Riemërtimi dështoi"
+    },
+    "merge": {
+      "title": "Bashko me llogarinë e regjistruar",
+      "description": "Nëse kjo person është regjistruar që atëherë, shkruani emailin e tyre për të transferuar të gjitha shpenzimet në llogarinë e tyre.",
+      "email_placeholder": "Email i përdoruesit të regjistruar",
+      "button": "Bashko llogaritë",
+      "confirm_title": "Jeni i sigurt?",
+      "confirm_description": "Kjo do të bashkojë {{name}} me llogarinë e regjistruar {{email}}. Të gjitha shpenzimet dhe anëtarësimet në grupe do të transferohen. Ky veprim nuk mund të zhbëhet.",
+      "confirm_button": "Po, bashko llogaritë",
+      "success": "Llogaritë u bashkuan me sukses",
+      "error": "Bashkimi dështoi"
+    }
   }
 }

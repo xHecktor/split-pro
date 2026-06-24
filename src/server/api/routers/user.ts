@@ -56,8 +56,27 @@ export const userRouter = createTRPCRouter({
   }),
 
   inviteFriend: protectedProcedure
-    .input(z.object({ email: z.string(), sendInviteEmail: z.boolean().optional() }))
+    .input(
+      z
+        .object({
+          email: z.string().email().optional(),
+          name: z.string().trim().min(1).optional(),
+          sendInviteEmail: z.boolean().optional(),
+        })
+        .refine((data) => data.email ?? data.name, {
+          message: 'Either email or name must be provided',
+        }),
+    )
     .mutation(async ({ input, ctx: { session } }) => {
+      // Local friend: only a name provided, no email. Mirrors Splitwise-imported users.
+      if (!input.email) {
+        return db.user.create({
+          data: {
+            name: input.name,
+          },
+        });
+      }
+
       const friend = await db.user.findUnique({
         where: {
           email: input.email,
@@ -71,7 +90,7 @@ export const userRouter = createTRPCRouter({
       const user = await db.user.create({
         data: {
           email: input.email,
-          name: input.email.split('@')[0],
+          name: input.name ?? input.email.split('@')[0],
         },
       });
 
@@ -395,6 +414,161 @@ export const userRouter = createTRPCRouter({
           },
         },
       });
+    }),
+
+  updateFriendName: protectedProcedure
+    .input(z.object({ friendId: z.number(), name: z.string().trim().min(1) }))
+    .mutation(async ({ input, ctx }) => {
+      // Only allow renaming users the current user has shared an expense with.
+      // Using ExpenseParticipant instead of BalanceView so this works even after settle-up
+      // or when the friend was just added but no expense exists yet.
+      const sharedExpense = await db.expense.findFirst({
+        where: {
+          deletedBy: null,
+          expenseParticipants: { some: { userId: ctx.session.user.id } },
+          OR: [
+            { paidBy: input.friendId },
+            { expenseParticipants: { some: { userId: input.friendId } } },
+          ],
+        },
+        select: { id: true },
+      });
+
+      if (!sharedExpense) {
+        const friendExists = await db.user.findUnique({
+          where: { id: input.friendId },
+          select: { id: true, accounts: true, emailVerified: true },
+        });
+
+        if (!friendExists) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+        }
+
+        // Registered users own their profile — nobody else may rename them.
+        if (0 < friendExists.accounts.length || friendExists.emailVerified) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Cannot rename a registered user',
+          });
+        }
+
+        // Local user with no shared expense yet — allow the rename.
+        return db.user.update({
+          where: { id: input.friendId },
+          data: { name: input.name },
+        });
+      }
+
+      const friend = await db.user.findUnique({
+        where: { id: input.friendId },
+        include: { accounts: true },
+      });
+
+      if (!friend) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      }
+
+      // Local friends only: registered users (linked account or verified email) own their profile.
+      if (0 < friend.accounts.length || friend.emailVerified) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Cannot rename a registered user',
+        });
+      }
+
+      return db.user.update({
+        where: { id: input.friendId },
+        data: { name: input.name },
+      });
+    }),
+
+  mergeLocalFriend: protectedProcedure
+    .input(z.object({ localFriendId: z.number(), registeredUserEmail: z.string().email() }))
+    .mutation(async ({ input, ctx }) => {
+      const localFriend = await db.user.findUnique({
+        where: { id: input.localFriendId },
+        include: { accounts: true },
+      });
+
+      if (!localFriend) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Local friend not found' });
+      }
+
+      if (0 < localFriend.accounts.length || (localFriend.emailVerified ?? localFriend.email)) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Target is not a local friend' });
+      }
+
+      const registeredUser = await db.user.findUnique({
+        where: { email: input.registeredUserEmail },
+        include: { accounts: true },
+      });
+
+      if (!registeredUser) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Registered user not found' });
+      }
+
+      if (0 === registeredUser.accounts.length && !registeredUser.emailVerified) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Target user is not a registered user' });
+      }
+
+      if (registeredUser.id === ctx.session.user.id) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge with yourself' });
+      }
+
+      const oldId = input.localFriendId;
+      const newId = registeredUser.id;
+
+      await db.$transaction(async (tx) => {
+        // Resolve ExpenseParticipant conflicts: if both users are on the same expense, drop the local one
+        await tx.$executeRaw`
+          DELETE FROM "public"."ExpenseParticipant"
+          WHERE "userId" = ${oldId}
+            AND "expenseId" IN (
+              SELECT "expenseId" FROM "public"."ExpenseParticipant" WHERE "userId" = ${newId}
+            )
+        `;
+
+        await tx.expenseParticipant.updateMany({ where: { userId: oldId }, data: { userId: newId } });
+
+        await tx.expense.updateMany({ where: { paidBy: oldId }, data: { paidBy: newId } });
+        await tx.expense.updateMany({ where: { addedBy: oldId }, data: { addedBy: newId } });
+        await tx.expense.updateMany({ where: { deletedBy: oldId }, data: { deletedBy: newId } });
+        await tx.expense.updateMany({ where: { updatedBy: oldId }, data: { updatedBy: newId } });
+
+        // Resolve GroupUser conflicts: if registered user is already in the group, drop the local membership
+        await tx.$executeRaw`
+          DELETE FROM "public"."GroupUser"
+          WHERE "userId" = ${oldId}
+            AND "groupId" IN (
+              SELECT "groupId" FROM "public"."GroupUser" WHERE "userId" = ${newId}
+            )
+        `;
+
+        await tx.groupUser.updateMany({ where: { userId: oldId }, data: { userId: newId } });
+
+        // Resolve FriendDefaultSplit conflicts: drop old entries where conflict exists
+        await tx.$executeRaw`
+          DELETE FROM "public"."FriendDefaultSplit"
+          WHERE ("userAId" = ${oldId} AND "userBId" IN (
+            SELECT "userBId" FROM "public"."FriendDefaultSplit" WHERE "userAId" = ${newId}
+          )) OR ("userBId" = ${oldId} AND "userAId" IN (
+            SELECT "userAId" FROM "public"."FriendDefaultSplit" WHERE "userBId" = ${newId}
+          ))
+        `;
+
+        await tx.$executeRaw`
+          UPDATE "public"."FriendDefaultSplit" SET "userAId" = ${newId} WHERE "userAId" = ${oldId}
+        `;
+        await tx.$executeRaw`
+          UPDATE "public"."FriendDefaultSplit" SET "userBId" = ${newId} WHERE "userBId" = ${oldId}
+        `;
+
+        await tx.expenseNote.updateMany({ where: { createdById: oldId }, data: { createdById: newId } });
+
+        await tx.user.delete({ where: { id: oldId } });
+      });
+
+      return { mergedIntoUserId: newId };
     }),
 
   downloadData: protectedProcedure.mutation(async ({ ctx }) => {

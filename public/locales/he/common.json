@@ -412,5 +412,25 @@
     "show_all_currencies": "",
     "today": "",
     "total_balance": ""
+  },
+  "balances": {
+    "rename": {
+      "title": "שינוי שם",
+      "placeholder": "שם",
+      "save": "שמור",
+      "success": "השם עודכן",
+      "error": "שינוי השם נכשל"
+    },
+    "merge": {
+      "title": "מיזוג עם חשבון רשום",
+      "description": "אם אדם זה נרשם מאז, הזן את האימייל שלו להעברת כל ההוצאות לחשבונו.",
+      "email_placeholder": "אימייל של משתמש רשום",
+      "button": "מיזוג חשבונות",
+      "confirm_title": "האם אתה בטוח?",
+      "confirm_description": "פעולה זו תמזג את {{name}} עם החשבון הרשום {{email}}. כל ההוצאות וחברויות הקבוצות יועברו. לא ניתן לבטל פעולה זו.",
+      "confirm_button": "כן, מזג חשבונות",
+      "success": "החשבונות מוזגו בהצלחה",
+      "error": "המיזוג נכשל"
+    }
   }
 }

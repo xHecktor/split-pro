@@ -126,6 +126,24 @@
     },
     "user_preferences": {
       "title": "Voorkeuren"
+    },
+    "rename": {
+      "title": "Hernoemen",
+      "placeholder": "Naam",
+      "save": "Opslaan",
+      "success": "Naam bijgewerkt",
+      "error": "Hernoemen mislukt"
+    },
+    "merge": {
+      "title": "Samenvoegen met geregistreerd account",
+      "description": "Als deze persoon zich inmiddels heeft geregistreerd, voer dan hun e-mail in om alle uitgaven naar hun account over te zetten.",
+      "email_placeholder": "E-mail van geregistreerde gebruiker",
+      "button": "Accounts samenvoegen",
+      "confirm_title": "Weet je het zeker?",
+      "confirm_description": "Dit zal {{name}} samenvoegen met het geregistreerde account {{email}}. Alle uitgaven en groepslidmaatschappen worden overgedragen. Deze actie kan niet ongedaan worden gemaakt.",
+      "confirm_button": "Ja, accounts samenvoegen",
+      "success": "Accounts succesvol samengevoegd",
+      "error": "Samenvoegen mislukt"
     }
   },
   "bank_transactions": {

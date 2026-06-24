@@ -126,6 +126,24 @@
     },
     "user_preferences": {
       "title": "Preferências"
+    },
+    "rename": {
+      "title": "Renomear",
+      "placeholder": "Nome",
+      "save": "Salvar",
+      "success": "Nome atualizado",
+      "error": "Falha ao renomear usuário"
+    },
+    "merge": {
+      "title": "Mesclar com conta registrada",
+      "description": "Se esta pessoa se registrou, insira o email dela para transferir todas as despesas para a conta.",
+      "email_placeholder": "Email do usuário registrado",
+      "button": "Mesclar contas",
+      "confirm_title": "Tem certeza?",
+      "confirm_description": "Isso mesclará {{name}} com a conta registrada {{email}}. Todas as despesas e participações em grupos serão transferidas. Esta ação não pode ser desfeita.",
+      "confirm_button": "Sim, mesclar contas",
+      "success": "Contas mescladas com sucesso",
+      "error": "Falha ao mesclar"
     }
   },
   "bank_transactions": {

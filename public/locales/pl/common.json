@@ -126,6 +126,24 @@
     },
     "user_preferences": {
       "title": "Preferencje"
+    },
+    "rename": {
+      "title": "Zmień nazwę",
+      "placeholder": "Nazwa",
+      "save": "Zapisz",
+      "success": "Nazwa zaktualizowana",
+      "error": "Nie udało się zmienić nazwy"
+    },
+    "merge": {
+      "title": "Połącz z zarejestrowanym kontem",
+      "description": "Jeśli ta osoba zarejestrowała się, podaj jej email, aby przenieść wszystkie wydatki na jej konto.",
+      "email_placeholder": "Email zarejestrowanego użytkownika",
+      "button": "Połącz konta",
+      "confirm_title": "Czy jesteś pewny?",
+      "confirm_description": "Spowoduje to połączenie {{name}} z zarejestrowanym kontem {{email}}. Wszystkie wydatki i członkostwa w grupach zostaną przeniesione. Tej czynności nie można cofnąć.",
+      "confirm_button": "Tak, połącz konta",
+      "success": "Konta zostały pomyślnie połączone",
+      "error": "Łączenie nie powiodło się"
     }
   },
   "bank_transactions": {

@@ -417,5 +417,25 @@
     "show_all_currencies": "",
     "today": "Hoje",
     "total_balance": ""
+  },
+  "balances": {
+    "rename": {
+      "title": "Renomear",
+      "placeholder": "Nome",
+      "save": "Guardar",
+      "success": "Nome atualizado",
+      "error": "Falha ao renomear utilizador"
+    },
+    "merge": {
+      "title": "Fundir com conta registada",
+      "description": "Se esta pessoa entretanto se registou, insere o email dela para transferir todas as despesas para a conta.",
+      "email_placeholder": "Email do utilizador registado",
+      "button": "Fundir contas",
+      "confirm_title": "Tens a certeza?",
+      "confirm_description": "Isto irá fundir {{name}} com a conta registada {{email}}. Todas as despesas e participações em grupos serão transferidas. Esta ação não pode ser desfeita.",
+      "confirm_button": "Sim, fundir contas",
+      "success": "Contas fundidas com sucesso",
+      "error": "Falha ao fundir"
+    }
   }
 }

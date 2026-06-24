@@ -297,7 +297,7 @@
       "add_members": "Añadir miembros",
       "add_members_details": {
         "add_to_split_pro": "Añadir a SplitPro",
-        "note": "Nota: el envío de invitaciones está deshabilitado",
+        "note": "Nota: el envío de invitaciones está deshabilitado por ahora debido al spam",
         "placeholder": "Nombre o correo electrónico",
         "send_invite": "Enviar invitación",
         "title": "Añadir miembros",
@@ -413,5 +413,25 @@
     "show_all_currencies": "Mostrar todas las monedas",
     "today": "Hoy",
     "total_balance": "Saldo total"
+  },
+  "balances": {
+    "rename": {
+      "title": "Renombrar",
+      "placeholder": "Nombre",
+      "save": "Guardar",
+      "success": "Nombre actualizado",
+      "error": "Error al renombrar usuario"
+    },
+    "merge": {
+      "title": "Fusionar con cuenta registrada",
+      "description": "Si esta persona se ha registrado, ingresa su email para transferir todos los gastos a su cuenta.",
+      "email_placeholder": "Email del usuario registrado",
+      "button": "Fusionar cuentas",
+      "confirm_title": "¿Estás seguro?",
+      "confirm_description": "Esto fusionará a {{name}} con la cuenta registrada {{email}}. Todos los gastos y membresías de grupos serán transferidos. Esta acción no se puede deshacer.",
+      "confirm_button": "Sí, fusionar cuentas",
+      "success": "Cuentas fusionadas exitosamente",
+      "error": "Error al fusionar"
+    }
   }
 }
