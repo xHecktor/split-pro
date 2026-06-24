@@ -173,11 +173,20 @@ export const authOptions: NextAuthOptions = {
                   SELECT "expenseId" FROM "public"."ExpenseParticipant" WHERE "userId" = ${newId}
                 )
             `;
-            await tx.expenseParticipant.updateMany({ where: { userId: oldId }, data: { userId: newId } });
+            await tx.expenseParticipant.updateMany({
+              where: { userId: oldId },
+              data: { userId: newId },
+            });
             await tx.expense.updateMany({ where: { paidBy: oldId }, data: { paidBy: newId } });
             await tx.expense.updateMany({ where: { addedBy: oldId }, data: { addedBy: newId } });
-            await tx.expense.updateMany({ where: { deletedBy: oldId }, data: { deletedBy: newId } });
-            await tx.expense.updateMany({ where: { updatedBy: oldId }, data: { updatedBy: newId } });
+            await tx.expense.updateMany({
+              where: { deletedBy: oldId },
+              data: { deletedBy: newId },
+            });
+            await tx.expense.updateMany({
+              where: { updatedBy: oldId },
+              data: { updatedBy: newId },
+            });
             await tx.$executeRaw`
               DELETE FROM "public"."GroupUser"
               WHERE "userId" = ${oldId}
@@ -186,7 +195,10 @@ export const authOptions: NextAuthOptions = {
                 )
             `;
             await tx.groupUser.updateMany({ where: { userId: oldId }, data: { userId: newId } });
-            await tx.expenseNote.updateMany({ where: { createdById: oldId }, data: { createdById: newId } });
+            await tx.expenseNote.updateMany({
+              where: { createdById: oldId },
+              data: { createdById: newId },
+            });
             await tx.user.delete({ where: { id: oldId } });
           });
         }
