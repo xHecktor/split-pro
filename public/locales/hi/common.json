@@ -41,7 +41,13 @@
         "import_success": ""
       },
       "no_file_chosen": "",
-      "note": ""
+      "note": "",
+      "two_ways_intro": "आपके Splitwise डेटा को निर्यात करने के दो तरीके हैं:",
+      "option1_title": "1. बाहरी लिंक के माध्यम से बैलेंस निर्यात",
+      "option1_note": "केवल बैलेंस निर्यात होते हैं — व्यक्तिगत खर्च नहीं।",
+      "option2_title": "2. Splitwise Pro के साथ पूर्ण निर्यात",
+      "option2_note": "सभी समूहों के साथ सभी व्यक्तिगत खर्च निर्यात होते हैं।",
+      "option2_instructions": "Splitwise वेबसाइट पर ⚙️ → अकाउंट सेटिंग्स → उन्नत सुविधाएँ → \"पूर्ण बैकअप डाउनलोड करें (JSON)\" पर जाएँ।"
     },
     "logout": "",
     "messages": {
@@ -63,7 +69,20 @@
     },
     "support_us": "",
     "title": "",
-    "write_review": ""
+    "write_review": "",
+    "import_splitpro_data": "SplitPro डेटा आयात करें",
+    "import_splitpro_data_details": {
+      "note": "निम्नलिखित डेटा आयात किया जाएगा। डुप्लिकेट से बचने के लिए खर्चों को ID से मिलाया जाएगा।",
+      "expenses": "खर्च",
+      "mode_merge": "मर्ज करें",
+      "mode_merge_description": "नया डेटा जोड़ा जाएगा, मौजूदा खर्च अपरिवर्तित रहेंगे।",
+      "mode_restore": "पुनर्स्थापित करें",
+      "mode_restore_description": "आपके सभी मौजूदा खर्च और समूह हटा दिए जाएंगे और बैकअप से बदल दिए जाएंगे।",
+      "mode_restore_warning": "यह क्रिया पूर्ववत नहीं की जा सकती।",
+      "messages": {
+        "import_success": "{{expenses}} खर्च और {{groups}} समूह सफलतापूर्वक आयात हुए"
+      }
+    }
   },
   "actions": {
     "add_expense": "",
@@ -83,6 +102,8 @@
     "next": "",
     "reconnect": "",
     "save": "",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all",
     "settle_up": "",
     "submit": ""
   },
@@ -160,7 +181,10 @@
     "unsubscribe_error": "",
     "upload_failed": "",
     "uploading_error": "",
-    "valid_email": ""
+    "valid_email": "",
+    "import_splitpro_failed": "SplitPro डेटा आयात करने में विफल। कृपया सुनिश्चित करें कि आपने एक वैध SplitPro निर्यात फ़ाइल अपलोड की है।",
+    "wrong_file_splitpro_on_splitwise": "This is a SplitPro export file. Please use the SplitPro import page.",
+    "wrong_file_splitwise_on_splitpro": "This is a Splitwise export file. Please use the Splitwise import page."
   },
   "expense_details": {
     "add_expense": "",

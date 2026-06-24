@@ -41,7 +41,13 @@
         "import_success": ""
       },
       "no_file_chosen": "",
-      "note": ""
+      "note": "",
+      "two_ways_intro": "ישנן שתי דרכים לייצא את נתוני ה-Splitwise שלך:",
+      "option1_title": "1. ייצוא יתרות דרך קישור חיצוני",
+      "option1_note": "רק יתרות מיוצאות — ללא הוצאות בודדות.",
+      "option2_title": "2. ייצוא מלא עם Splitwise Pro",
+      "option2_note": "כל הקבוצות עם כל ההוצאות הבודדות מיוצאות.",
+      "option2_instructions": "עבור באתר Splitwise ל-⚙️ → הגדרות חשבון → תכונות מתקדמות → \"הורד גיבוי מלא (JSON)\"."
     },
     "logout": "",
     "messages": {
@@ -63,7 +69,20 @@
     },
     "support_us": "",
     "title": "",
-    "write_review": ""
+    "write_review": "",
+    "import_splitpro_data": "ייבא נתוני SplitPro",
+    "import_splitpro_data_details": {
+      "note": "הנתונים הבאים ייובאו. הוצאות יותאמו לפי מזהה כדי למנוע כפילויות.",
+      "expenses": "הוצאות",
+      "mode_merge": "מיזוג",
+      "mode_merge_description": "נתונים חדשים יתווספו, הוצאות קיימות יישארו ללא שינוי.",
+      "mode_restore": "שחזור",
+      "mode_restore_description": "כל ההוצאות והקבוצות הקיימות שלך יימחקו ויוחלפו בגיבוי.",
+      "mode_restore_warning": "לא ניתן לבטל פעולה זו.",
+      "messages": {
+        "import_success": "יובאו בהצלחה {{expenses}} הוצאות ו-{{groups}} קבוצות"
+      }
+    }
   },
   "actions": {
     "add_expense": "",
@@ -83,6 +102,8 @@
     "next": "",
     "reconnect": "",
     "save": "",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all",
     "settle_up": "",
     "submit": ""
   },
@@ -160,7 +181,10 @@
     "unsubscribe_error": "",
     "upload_failed": "",
     "uploading_error": "",
-    "valid_email": ""
+    "valid_email": "",
+    "import_splitpro_failed": "ייבוא נתוני SplitPro נכשל. אנא ודא שהעלית קובץ ייצוא SplitPro תקין.",
+    "wrong_file_splitpro_on_splitwise": "This is a SplitPro export file. Please use the SplitPro import page.",
+    "wrong_file_splitwise_on_splitpro": "This is a Splitwise export file. Please use the Splitwise import page."
   },
   "expense_details": {
     "add_expense": "",

@@ -52,7 +52,13 @@
         "import_success": "Import lyckades"
       },
       "no_file_chosen": "Ingen fil vald",
-      "note": "Notera: Vi stödjer för närvarande endast import av vänner och grupper. Transaktioner kommer inte importeras. Vi arbetar på det."
+      "note": "Notera: Vi stödjer för närvarande endast import av vänner och grupper. Transaktioner kommer inte importeras. Vi arbetar på det.",
+      "two_ways_intro": "Det finns två sätt att exportera dina Splitwise-data:",
+      "option1_title": "1. Saldoexport via extern länk",
+      "option1_note": "Endast saldon exporteras — inga enskilda utgifter.",
+      "option2_title": "2. Fullständig export med Splitwise Pro",
+      "option2_note": "Alla grupper med alla enskilda utgifter exporteras.",
+      "option2_instructions": "Gå till Splitwise webbplats → ⚙️ → Kontoinställningar → Avancerade funktioner → \"Ladda ner fullständig säkerhetskopia (JSON)\"."
     },
     "logout": "Logga ut",
     "messages": {
@@ -74,7 +80,20 @@
     },
     "support_us": "Sponsra oss",
     "title": "Konto",
-    "write_review": "Skriv en recension"
+    "write_review": "Skriv en recension",
+    "import_splitpro_data": "Importera SplitPro-data",
+    "import_splitpro_data_details": {
+      "note": "Följande data kommer att importeras. Utgifter matchas med ID för att undvika dubbletter.",
+      "expenses": "utgifter",
+      "mode_merge": "Sammanfoga",
+      "mode_merge_description": "Nya data läggs till, befintliga utgifter förblir oförändrade.",
+      "mode_restore": "Återställ",
+      "mode_restore_description": "Alla dina befintliga utgifter och grupper kommer att raderas och ersättas av säkerhetskopian.",
+      "mode_restore_warning": "Denna åtgärd kan inte ångras.",
+      "messages": {
+        "import_success": "{{expenses}} utgifter och {{groups}} grupper har importerats"
+      }
+    }
   },
   "actions": {
     "add_expense": "Lägg till utgift",
@@ -94,6 +113,8 @@
     "next": "Nästa",
     "reconnect": "Återanslut",
     "save": "Spara",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all",
     "settle_up": "Gör kvitt",
     "submit": "Skicka"
   },
@@ -182,7 +203,10 @@
     "unsubscribe_error": "Fel vid avslutning av prenumeration",
     "upload_failed": "Uppladdning misslyckades",
     "uploading_error": "Fel vid uppladdning av fil",
-    "valid_email": "Ange giltig e-post"
+    "valid_email": "Ange giltig e-post",
+    "import_splitpro_failed": "Det gick inte att importera SplitPro-data. Se till att du laddade upp en giltig SplitPro-exportfil.",
+    "wrong_file_splitpro_on_splitwise": "This is a SplitPro export file. Please use the SplitPro import page.",
+    "wrong_file_splitwise_on_splitpro": "This is a Splitwise export file. Please use the Splitwise import page."
   },
   "expense_details": {
     "add_expense": "Lägg till utgift",

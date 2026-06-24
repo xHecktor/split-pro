@@ -52,7 +52,13 @@
         "import_success": "Importálás sikeres"
       },
       "no_file_chosen": "Nincs kiválasztott fájl",
-      "note": "Megjegyzés: Jelenleg csak a barátok és csoportok importálását támogatja. Tranzakciókat nem fog importálni. Dolgozunk rajta."
+      "note": "Megjegyzés: Jelenleg csak a barátok és csoportok importálását támogatja. Tranzakciókat nem fog importálni. Dolgozunk rajta.",
+      "two_ways_intro": "Kétféleképpen exportálhatod a Splitwise adataidat:",
+      "option1_title": "1. Egyenleg-exportálás külső linken keresztül",
+      "option1_note": "Csak egyenlegek kerülnek exportálásra — egyedi kiadások nem.",
+      "option2_title": "2. Teljes exportálás Splitwise Pro-val",
+      "option2_note": "Minden csoport az összes egyedi kiadással együtt exportálásra kerül.",
+      "option2_instructions": "A Splitwise weboldalon menj a ⚙️ → Fiókbeállítások → Speciális funkciók → \"Teljes biztonsági mentés letöltése (JSON)\" menüpontra."
     },
     "logout": "Kijelentkezés",
     "messages": {
@@ -74,7 +80,20 @@
     },
     "support_us": "Támogass minket",
     "title": "Fiók",
-    "write_review": "Írj véleményt"
+    "write_review": "Írj véleményt",
+    "import_splitpro_data": "SplitPro adatok importálása",
+    "import_splitpro_data_details": {
+      "note": "A következő adatok kerülnek importálásra. A kiadások azonosító alapján kerülnek egyeztetésre a duplikátumok elkerülése érdekében.",
+      "expenses": "kiadások",
+      "mode_merge": "Összevonás",
+      "mode_merge_description": "Az új adatok hozzáadásra kerülnek, a meglévő kiadások változatlanok maradnak.",
+      "mode_restore": "Visszaállítás",
+      "mode_restore_description": "Az összes meglévő kiadásod és csoportod törlésre kerül, és a mentés váltja fel őket.",
+      "mode_restore_warning": "Ez a művelet nem vonható vissza.",
+      "messages": {
+        "import_success": "Sikeresen importálva {{expenses}} kiadás és {{groups}} csoport"
+      }
+    }
   },
   "actions": {
     "add_expense": "Költség hozzáadása",
@@ -94,6 +113,8 @@
     "next": "Következő",
     "reconnect": "Újracsatlakozás",
     "save": "Mentés",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all",
     "settle_up": "Kiegyenlítés",
     "submit": "Küldés"
   },
@@ -182,7 +203,10 @@
     "unsubscribe_error": "Hiba az értesítésekről történő leiratkozáskor",
     "upload_failed": "Nem sikerült feltölteni a fájlt",
     "uploading_error": "Nem sikerült feltölteni a fájlt",
-    "valid_email": "Adj meg érvényes e-mail címet"
+    "valid_email": "Adj meg érvényes e-mail címet",
+    "import_splitpro_failed": "A SplitPro adatok importálása nem sikerült. Győződjön meg arról, hogy érvényes SplitPro exportfájlt töltött fel.",
+    "wrong_file_splitpro_on_splitwise": "This is a SplitPro export file. Please use the SplitPro import page.",
+    "wrong_file_splitwise_on_splitpro": "This is a Splitwise export file. Please use the Splitwise import page."
   },
   "expense_details": {
     "add_expense": "Költség hozzáadása",
@@ -196,7 +220,7 @@
         "note": "Megjegyzés: a meghívó küldése jelenleg le van tiltva a spam miatt",
         "only_one_group_time": "Egyszerre csak egy csoportod lehet",
         "send_invite": "Meghívó küldése felhasználónak",
-        "warning": "Figyelmeztetés: Ne használd a „meghívó küldése” funkciót, ha érvénytelen az e-mail cím. Helyette használd a „hozzáadás a SplitPro-hoz” funkciót. Fiókod blokkolásra kerül, ha ezt a funkciót nem rendeltetésszerűen használod"
+        "warning": "Figyelmeztetés: Ne használd a „meghívó küldése\" funkciót, ha érvénytelen az e-mail cím. Helyette használd a „hozzáadás a SplitPro-hoz\" funkciót. Fiókod blokkolásra kerül, ha ezt a funkciót nem rendeltetésszerűen használod"
       },
       "split_type_section": {
         "split_equally": "egyenlően elosztva",
@@ -331,7 +355,7 @@
         "placeholder": "Írd be a neved vagy az e-mail címed",
         "send_invite": "Meghívó küldése felhasználónak",
         "title": "Tagok hozzáadása",
-        "warning": "Figyelmeztetés: Ne használd a „meghívó küldése” funkciót, ha érvénytelen az e-mail cím. Helyette használd a „hozzáadás a SplitPro-hoz” funkciót. Fiókod blokkolásra kerül, ha ezt a funkciót nem rendeltetésszerűen használod"
+        "warning": "Figyelmeztetés: Ne használd a „meghívó küldése\" funkciót, ha érvénytelen az e-mail cím. Helyette használd a „hozzáadás a SplitPro-hoz\" funkciót. Fiókod blokkolásra kerül, ha ezt a funkciót nem rendeltetésszerűen használod"
       },
       "invite_link": "Meghívólink",
       "no_members": "Még nincsenek tagok a csoportban."

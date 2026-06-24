@@ -41,7 +41,13 @@
         "import_success": ""
       },
       "no_file_chosen": "",
-      "note": ""
+      "note": "",
+      "two_ways_intro": "有兩種方式匯出您的 Splitwise 資料：",
+      "option1_title": "1. 透過外部連結匯出餘額",
+      "option1_note": "僅匯出餘額，不包含個別支出。",
+      "option2_title": "2. 使用 Splitwise Pro 完整匯出",
+      "option2_note": "匯出所有群組及所有個別支出。",
+      "option2_instructions": "前往 Splitwise 網站 → ⚙️ → 帳戶設定 → 進階功能 → 「下載完整備份（JSON）」。"
     },
     "logout": "",
     "messages": {
@@ -63,7 +69,20 @@
     },
     "support_us": "",
     "title": "",
-    "write_review": ""
+    "write_review": "",
+    "import_splitpro_data": "匯入 SplitPro 資料",
+    "import_splitpro_data_details": {
+      "note": "將匯入以下資料。費用將按 ID 進行匹配以避免重複。",
+      "expenses": "筆費用",
+      "mode_merge": "合併",
+      "mode_merge_description": "新資料將被加入，現有費用保持不變。",
+      "mode_restore": "還原",
+      "mode_restore_description": "您所有現有的費用和群組將被刪除，並由備份取代。",
+      "mode_restore_warning": "此操作無法復原。",
+      "messages": {
+        "import_success": "成功匯入 {{expenses}} 筆費用和 {{groups}} 個群組"
+      }
+    }
   },
   "actions": {
     "add_expense": "",
@@ -83,6 +102,8 @@
     "next": "",
     "reconnect": "",
     "save": "",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all",
     "settle_up": "",
     "submit": ""
   },
@@ -160,7 +181,10 @@
     "unsubscribe_error": "",
     "upload_failed": "",
     "uploading_error": "",
-    "valid_email": ""
+    "valid_email": "",
+    "import_splitpro_failed": "匯入 SplitPro 資料失敗。請確保您上傳了有效的 SplitPro 匯出檔案。",
+    "wrong_file_splitpro_on_splitwise": "This is a SplitPro export file. Please use the SplitPro import page.",
+    "wrong_file_splitwise_on_splitpro": "This is a Splitwise export file. Please use the Splitwise import page."
   },
   "expense_details": {
     "add_expense": "",

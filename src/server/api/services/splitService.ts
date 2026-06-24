@@ -330,26 +330,8 @@ export async function getCompleteFriendsDetails(userId: number) {
     },
   });
 
-  const friends = viewBalances.reduce(
-    (acc, balance) => {
-      const { friendId } = balance;
-      acc[friendId] ??= {
-        balances: [],
-        id: friendId,
-        email: balance.friend.email,
-        name: balance.friend.name,
-      };
-
-      if (0n !== balance.amount) {
-        acc[friendId]?.balances.push({
-          currency: balance.currency,
-          amount: balance.amount,
-        });
-      }
-
-      return acc;
-    },
-    {} as Record<
+  const friends = viewBalances.reduce<
+    Record<
       number,
       {
         id: number;
@@ -357,8 +339,25 @@ export async function getCompleteFriendsDetails(userId: number) {
         name?: string | null;
         balances: { currency: string; amount: bigint }[];
       }
-    >,
-  );
+    >
+  >((acc, balance) => {
+    const { friendId } = balance;
+    acc[friendId] ??= {
+      balances: [],
+      id: friendId,
+      email: balance.friend.email,
+      name: balance.friend.name,
+    };
+
+    if (0n !== balance.amount) {
+      acc[friendId]?.balances.push({
+        currency: balance.currency,
+        amount: balance.amount,
+      });
+    }
+
+    return acc;
+  }, {});
 
   return friends;
 }
@@ -381,6 +380,713 @@ export async function getCompleteGroupDetails(userId: number) {
   return groups;
 }
 
+export async function getFullExportData(userId: number) {
+  // All users this user has interacted with
+  const allExpenses = await db.expense.findMany({
+    where: {
+      deletedAt: null,
+      expenseParticipants: {
+        some: { userId },
+      },
+    },
+    include: {
+      expenseParticipants: {
+        include: { user: { select: { id: true, name: true, email: true } } },
+      },
+      paidByUser: { select: { id: true, name: true, email: true } },
+      addedByUser: { select: { id: true, name: true, email: true } },
+      group: { select: { id: true, name: true, publicId: true } },
+    },
+    orderBy: { expenseDate: 'asc' },
+  });
+
+  const groups = await db.group.findMany({
+    where: { groupUsers: { some: { userId } } },
+    include: {
+      groupUsers: {
+        include: { user: { select: { id: true, name: true, email: true } } },
+      },
+    },
+  });
+
+  // Collect all unique users referenced in expenses
+  const userMap = new Map<number, { id: number; name: string | null; email: string | null }>();
+  for (const expense of allExpenses) {
+    userMap.set(expense.paidByUser.id, expense.paidByUser);
+    userMap.set(expense.addedByUser.id, expense.addedByUser);
+    for (const p of expense.expenseParticipants) {
+      userMap.set(p.user.id, p.user);
+    }
+  }
+  for (const group of groups) {
+    for (const gu of group.groupUsers) {
+      userMap.set(gu.user.id, gu.user);
+    }
+  }
+
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    exportedByUserId: userId,
+    users: Array.from(userMap.values()),
+    groups: groups.map((g) => ({
+      id: g.id,
+      name: g.name,
+      publicId: g.publicId,
+      defaultCurrency: g.defaultCurrency,
+      createdAt: g.createdAt,
+      members: g.groupUsers.map((gu) => ({ userId: gu.userId })),
+    })),
+    expenses: allExpenses.map((e) => ({
+      id: e.id,
+      name: e.name,
+      category: e.category,
+      amount: e.amount.toString(),
+      currency: e.currency,
+      splitType: e.splitType,
+      expenseDate: e.expenseDate,
+      paidByUserId: e.paidBy,
+      addedByUserId: e.addedBy,
+      groupId: e.groupId,
+      participants: e.expenseParticipants.map((p) => ({
+        userId: p.userId,
+        amount: p.amount.toString(),
+      })),
+    })),
+  };
+}
+
+export type ImportLogFn = (type: 'info' | 'warn' | 'error' | 'success', message: string) => void;
+
+export async function importSplitProData(
+  currentUserId: number,
+  data: Awaited<ReturnType<typeof getFullExportData>>,
+  onLog?: ImportLogFn,
+  selectedGroupIds?: Set<number>,
+) {
+  const log: ImportLogFn = onLog ?? (() => undefined);
+
+  log(
+    'info',
+    `Starting import: ${data.users.length} users, ${data.groups.length} groups, ${data.expenses.length} expenses`,
+  );
+
+  // Build lookup maps for human-readable log messages
+  const exportUserNames = new Map<number, string>();
+  for (const u of data.users) {
+    exportUserNames.set(u.id, u.name ?? u.email ?? `User #${u.id}`);
+  }
+  const exportGroupNames = new Map<number, string>();
+  for (const g of data.groups) {
+    exportGroupNames.set(g.id, g.name);
+  }
+
+  // Build mapping from exported userId → existing or new local userId
+  const userIdMap = new Map<number, number>();
+
+  for (const exportedUser of data.users) {
+    if (exportedUser.id === data.exportedByUserId) {
+      userIdMap.set(exportedUser.id, currentUserId);
+      continue;
+    }
+
+    // Try to find by email first
+    if (exportedUser.email) {
+      const existing = await db.user.findUnique({ where: { email: exportedUser.email } });
+      if (existing) {
+        userIdMap.set(exportedUser.id, existing.id);
+        log(
+          'info',
+          `User mapped: "${exportedUser.name ?? 'unknown'}" (${exportedUser.email}, export #${exportedUser.id}) → existing account (DB #${existing.id})`,
+        );
+        continue;
+      }
+    }
+
+    // For local users (no email), deduplicate by name to avoid duplicates on repeated imports
+    const localName = exportedUser.name ?? 'Unknown';
+    const existingLocal = await db.user.findFirst({
+      where: { name: localName, email: null, accounts: { none: {} } },
+    });
+    if (existingLocal) {
+      userIdMap.set(exportedUser.id, existingLocal.id);
+      log(
+        'info',
+        `User mapped: "${localName}" (no email, export #${exportedUser.id}) → existing local DB #${existingLocal.id}`,
+      );
+      continue;
+    }
+
+    // Create as local (unregistered) user
+    const newUser = await db.user.create({
+      data: {
+        name: localName,
+        email: null,
+        emailVerified: null,
+      },
+    });
+    userIdMap.set(exportedUser.id, newUser.id);
+    log(
+      'info',
+      `User created: "${localName}" (no email, export #${exportedUser.id}) → new DB #${newUser.id}`,
+    );
+  }
+
+  // Warn about multiple export IDs mapping to the same DB user
+  const reverseMap = new Map<number, number[]>();
+  for (const [exportId, dbId] of userIdMap) {
+    const list = reverseMap.get(dbId) ?? [];
+    list.push(exportId);
+    reverseMap.set(dbId, list);
+  }
+  for (const [dbId, exportIds] of reverseMap) {
+    if (exportIds.length > 1) {
+      const names = exportIds
+        .map((id) => `"${exportUserNames.get(id) ?? 'unknown'}" (export #${id})`)
+        .join(', ');
+      log(
+        'warn',
+        `${exportIds.length} exported users ${names} all map to same DB user #${dbId} — their expenses will be merged. This usually means duplicate local users existed during export.`,
+      );
+    }
+  }
+
+  log('info', `Users resolved: ${userIdMap.size} total`);
+
+  // Create groups
+  const groupIdMap = new Map<number, number>();
+  const skippedGroupIds = new Set<number>();
+  for (const exportedGroup of data.groups) {
+    if (selectedGroupIds && !selectedGroupIds.has(exportedGroup.id)) {
+      skippedGroupIds.add(exportedGroup.id);
+      log(
+        'info',
+        `Group "${exportedGroup.name}" (${exportedGroup.publicId}): skipped (not selected)`,
+      );
+      continue;
+    }
+    const existing = await db.group.findUnique({
+      where: { publicId: exportedGroup.publicId },
+      include: { groupUsers: { select: { userId: true } } },
+    });
+    if (existing) {
+      groupIdMap.set(exportedGroup.id, existing.id);
+
+      // Restore missing group memberships
+      const existingMemberIds = new Set(existing.groupUsers.map((gu) => gu.userId));
+      const missingMembers = exportedGroup.members
+        .map((m) => userIdMap.get(m.userId))
+        .filter((uid): uid is number => uid !== undefined && !existingMemberIds.has(uid));
+
+      if (missingMembers.length > 0) {
+        await db.groupUser.createMany({
+          data: missingMembers.map((userId) => ({ userId, groupId: existing.id })),
+          skipDuplicates: true,
+        });
+        const memberNames = exportedGroup.members
+          .filter((m) => {
+            const uid = userIdMap.get(m.userId);
+            return uid !== undefined && !existingMemberIds.has(uid);
+          })
+          .map(
+            (m) =>
+              `"${exportUserNames.get(m.userId) ?? 'unknown'}" (DB #${userIdMap.get(m.userId)})`,
+          );
+        log(
+          'info',
+          `Group "${exportedGroup.name}" (${exportedGroup.publicId}, DB #${existing.id}): restored ${missingMembers.length} member(s): ${memberNames.join(', ')}`,
+        );
+      } else {
+        log(
+          'info',
+          `Group "${exportedGroup.name}" (${exportedGroup.publicId}, DB #${existing.id}): already exists (${existing.groupUsers.length} members)`,
+        );
+      }
+      continue;
+    }
+
+    const newGroup = await db.group.create({
+      data: {
+        name: exportedGroup.name,
+        publicId: exportedGroup.publicId,
+        defaultCurrency: exportedGroup.defaultCurrency,
+        userId: currentUserId,
+        groupUsers: {
+          create: exportedGroup.members
+            .map((m) => ({ userId: userIdMap.get(m.userId) }))
+            .filter((m): m is { userId: number } => m.userId !== undefined),
+        },
+      },
+    });
+    groupIdMap.set(exportedGroup.id, newGroup.id);
+    log(
+      'info',
+      `Group "${exportedGroup.name}" (${exportedGroup.publicId}) created → DB #${newGroup.id}`,
+    );
+  }
+
+  log(
+    'info',
+    `Groups processed: ${groupIdMap.size}${skippedGroupIds.size > 0 ? `, ${skippedGroupIds.size} skipped` : ''}`,
+  );
+
+  // Create expenses (or restore missing participants for existing ones)
+  let expensesImported = 0;
+  let expensesSkipped = 0;
+  const filteredExpenses =
+    skippedGroupIds.size > 0
+      ? data.expenses.filter((e) => !e.groupId || !skippedGroupIds.has(e.groupId))
+      : data.expenses;
+  const total = filteredExpenses.length;
+  if (filteredExpenses.length < data.expenses.length) {
+    log(
+      'info',
+      `Expenses: ${data.expenses.length} total, ${data.expenses.length - filteredExpenses.length} filtered out (group not selected), ${total} to process`,
+    );
+  }
+  for (let i = 0; i < total; i++) {
+    const exportedExpense = filteredExpenses[i]!;
+    if (i > 0 && i % 100 === 0) {
+      log('info', `Progress: ${i}/${total} expenses processed...`);
+    }
+
+    const existing = await db.expense.findUnique({
+      where: { id: exportedExpense.id },
+      include: { expenseParticipants: { select: { userId: true } } },
+    });
+
+    if (existing) {
+      // Restore any participants that were deleted after the export
+      const existingUserIds = new Set(existing.expenseParticipants.map((p) => p.userId));
+      const missingParticipants = exportedExpense.participants
+        .map((p) => ({ userId: userIdMap.get(p.userId), amount: BigInt(p.amount) }))
+        .filter(
+          (p): p is { userId: number; amount: bigint } =>
+            p.userId !== undefined && !existingUserIds.has(p.userId),
+        );
+
+      if (missingParticipants.length > 0) {
+        await db.expenseParticipant.createMany({
+          data: missingParticipants.map((p) => ({ ...p, expenseId: exportedExpense.id })),
+          skipDuplicates: true,
+        });
+      }
+      const groupName = exportedExpense.groupId
+        ? (exportGroupNames.get(exportedExpense.groupId) ?? 'unknown group')
+        : 'no group';
+      const expDate = new Date(exportedExpense.expenseDate).toLocaleDateString('de-DE');
+      log(
+        'warn',
+        `Expense skipped (already exists): "${exportedExpense.name}" [${exportedExpense.id}] — ${exportedExpense.amount} ${exportedExpense.currency}, ${expDate}, ${groupName}`,
+      );
+      expensesSkipped++;
+      continue;
+    }
+
+    const paidByUserId = userIdMap.get(exportedExpense.paidByUserId);
+    const addedByUserId = userIdMap.get(exportedExpense.addedByUserId);
+    if (!paidByUserId || !addedByUserId) {
+      const paidByName = exportUserNames.get(exportedExpense.paidByUserId) ?? 'unknown';
+      const addedByName = exportUserNames.get(exportedExpense.addedByUserId) ?? 'unknown';
+      const groupName = exportedExpense.groupId
+        ? (exportGroupNames.get(exportedExpense.groupId) ?? 'unknown group')
+        : 'no group';
+      const expDate = new Date(exportedExpense.expenseDate).toLocaleDateString('de-DE');
+      const missing = [];
+      if (!paidByUserId) {
+        missing.push(`payer "${paidByName}" (export #${exportedExpense.paidByUserId}) not found`);
+      }
+      if (!addedByUserId) {
+        missing.push(
+          `creator "${addedByName}" (export #${exportedExpense.addedByUserId}) not found`,
+        );
+      }
+      log(
+        'error',
+        `Expense skipped (${missing.join(', ')}): "${exportedExpense.name}" [${exportedExpense.id}] — ${exportedExpense.amount} ${exportedExpense.currency}, ${expDate}, ${groupName}`,
+      );
+      expensesSkipped++;
+      continue;
+    }
+
+    const groupId = exportedExpense.groupId ? groupIdMap.get(exportedExpense.groupId) : null;
+
+    try {
+      await db.expense.create({
+        data: {
+          id: exportedExpense.id,
+          name: exportedExpense.name,
+          category: exportedExpense.category,
+          amount: BigInt(exportedExpense.amount),
+          currency: exportedExpense.currency,
+          splitType: exportedExpense.splitType,
+          expenseDate: new Date(exportedExpense.expenseDate),
+          paidBy: paidByUserId,
+          addedBy: addedByUserId,
+          groupId: groupId ?? null,
+          expenseParticipants: {
+            create: [
+              ...exportedExpense.participants
+                .map((p) => ({
+                  userId: userIdMap.get(p.userId),
+                  amount: BigInt(p.amount),
+                }))
+                .filter((p): p is { userId: number; amount: bigint } => p.userId !== undefined)
+                .reduce(
+                  (acc, p) => (acc.has(p.userId) ? acc : acc.set(p.userId, p)),
+                  new Map<number, { userId: number; amount: bigint }>(),
+                )
+                .values(),
+            ],
+          },
+        },
+      });
+      expensesImported++;
+    } catch (err) {
+      const groupName = exportedExpense.groupId
+        ? (exportGroupNames.get(exportedExpense.groupId) ?? 'unknown group')
+        : 'no group';
+      const expDate = new Date(exportedExpense.expenseDate).toLocaleDateString('de-DE');
+      const paidByName = exportUserNames.get(exportedExpense.paidByUserId) ?? 'unknown';
+      const errMsg = err instanceof Error ? err.message : String(err);
+      log(
+        'error',
+        `Expense failed: "${exportedExpense.name}" [${exportedExpense.id}] — ${exportedExpense.amount} ${exportedExpense.currency}, ${expDate}, ${groupName}, paid by "${paidByName}" (DB #${paidByUserId}). Error: ${errMsg}`,
+      );
+      expensesSkipped++;
+    }
+  }
+
+  log('success', `Import complete: ${expensesImported} imported, ${expensesSkipped} skipped`);
+  return { usersImported: userIdMap.size, groupsImported: groupIdMap.size, expensesImported };
+}
+
+export async function restoreSplitProData(
+  currentUserId: number,
+  data: Awaited<ReturnType<typeof getFullExportData>>,
+  onLog?: ImportLogFn,
+  _selectedGroupIds?: Set<number>,
+) {
+  const log: ImportLogFn = onLog ?? (() => undefined);
+
+  log('info', 'Restore mode: deleting existing data...');
+
+  // Delete all expenses the current user is involved in (as payer or participant)
+  const userExpenseIds = await db.expense.findMany({
+    where: {
+      OR: [{ paidBy: currentUserId }, { expenseParticipants: { some: { userId: currentUserId } } }],
+      deletedAt: null,
+    },
+    select: { id: true },
+  });
+  const expenseIds = userExpenseIds.map((e) => e.id);
+
+  log('info', `Deleting ${expenseIds.length} expenses and group memberships...`);
+
+  await db.$transaction([
+    db.expenseParticipant.deleteMany({ where: { expenseId: { in: expenseIds } } }),
+    db.expense.deleteMany({ where: { id: { in: expenseIds } } }),
+    // Remove user from all groups, then delete groups they own with no remaining members
+    db.groupUser.deleteMany({ where: { userId: currentUserId } }),
+  ]);
+
+  // Delete groups created by this user that now have no members
+  await db.group.deleteMany({
+    where: { userId: currentUserId, groupUsers: { none: {} } },
+  });
+
+  log('info', 'Existing data deleted. Starting fresh import...');
+
+  // Now import fresh from the backup
+  return importSplitProData(currentUserId, data, onLog);
+}
+
+// Converts a numeric Splitwise expense ID to a deterministic UUID-shaped string
+function splitwiseIdToUuid(swId: number): string {
+  const hex = swId.toString(16).padStart(12, '0');
+  return `00000000-0000-4000-8000-${hex}`;
+}
+
+interface SplitwiseFriend {
+  id: number;
+  first_name: string;
+  last_name?: string | null;
+  email?: string | null;
+}
+
+interface SplitwiseExpense {
+  id: number;
+  description: string;
+  cost: string;
+  currency_code: string;
+  date: string;
+  group_id: number | null;
+  payment: boolean;
+  deleted_at: string | null;
+  category?: { name: string } | null;
+  repayments: { from: number; to: number; amount: string }[];
+}
+
+interface SplitwiseProBackup {
+  user: { id: number; email: string; first_name: string; last_name?: string };
+  friends: SplitwiseFriend[];
+  groups: {
+    id: number;
+    name: string;
+    members: { id: number; first_name?: string; last_name?: string; email?: string | null }[];
+  }[];
+  expenses: SplitwiseExpense[];
+}
+
+export async function importFromSplitwisePro(
+  currentUserId: number,
+  data: SplitwiseProBackup,
+  onLog?: ImportLogFn,
+  selectedGroupIds?: Set<number>,
+) {
+  const log: ImportLogFn = onLog ?? (() => undefined);
+  const activeExpenses = data.expenses.filter((e) => !e.deleted_at);
+  log(
+    'info',
+    `Starting Splitwise import: ${data.friends.length} friends, ${data.groups.length} groups, ${activeExpenses.length} active expenses`,
+  );
+
+  // Build Splitwise userId → SplitPro userId map
+  const userIdMap = new Map<number, number>();
+  userIdMap.set(data.user.id, currentUserId);
+
+  // Helper: resolve or create a local user by name
+  async function resolveLocalUser(id: number, name: string, email?: string | null) {
+    if (userIdMap.has(id)) {
+      return;
+    }
+    if (email) {
+      const existing = await db.user.findUnique({ where: { email } });
+      if (existing) {
+        userIdMap.set(id, existing.id);
+        return;
+      }
+      const newUser = await db.user.create({ data: { name, email } });
+      userIdMap.set(id, newUser.id);
+    } else {
+      const existing = await db.user.findFirst({
+        where: { name, email: null, accounts: { none: {} } },
+      });
+      if (existing) {
+        userIdMap.set(id, existing.id);
+        return;
+      }
+      const newUser = await db.user.create({ data: { name, email: null } });
+      userIdMap.set(id, newUser.id);
+    }
+  }
+
+  for (const friend of data.friends) {
+    const name = [friend.first_name, friend.last_name].filter(Boolean).join(' ');
+    await resolveLocalUser(friend.id, name, friend.email);
+  }
+
+  // Also register all group members so no expense participant is unknown
+  for (const swGroup of data.groups) {
+    for (const m of swGroup.members) {
+      if (userIdMap.has(m.id)) {
+        continue;
+      }
+      const name = [m.first_name, m.last_name].filter(Boolean).join(' ') || 'Unknown';
+      await resolveLocalUser(m.id, name, m.email);
+    }
+  }
+
+  log('info', `Users resolved: ${userIdMap.size} total`);
+
+  // Build Splitwise groupId → SplitPro groupId map
+  const groupIdMap = new Map<number, number>();
+  const skippedGroupIds = new Set<number>();
+  for (const swGroup of data.groups) {
+    if (swGroup.id === 0) {
+      continue;
+    } // Splitwise uses 0 for "no group"
+    if (selectedGroupIds && !selectedGroupIds.has(swGroup.id)) {
+      skippedGroupIds.add(swGroup.id);
+      log('info', `Group "${swGroup.name}" (SW #${swGroup.id}): skipped (not selected)`);
+      continue;
+    }
+    const existing = await db.group.findFirst({ where: { name: swGroup.name } });
+    if (existing) {
+      groupIdMap.set(swGroup.id, existing.id);
+      log(
+        'info',
+        `Group "${swGroup.name}" (SW #${swGroup.id}): already exists → DB #${existing.id}`,
+      );
+    } else {
+      const members = swGroup.members
+        .map((m) => userIdMap.get(m.id))
+        .filter((id): id is number => id !== undefined);
+      const newGroup = await db.group.create({
+        data: {
+          name: swGroup.name,
+          publicId: nanoid(),
+          userId: currentUserId,
+          groupUsers: { create: members.map((userId) => ({ userId })) },
+        },
+      });
+      groupIdMap.set(swGroup.id, newGroup.id);
+      log(
+        'info',
+        `Group "${swGroup.name}" (SW #${swGroup.id}) created → DB #${newGroup.id}, ${members.length} member(s)`,
+      );
+    }
+  }
+
+  log(
+    'info',
+    `Groups processed: ${groupIdMap.size}${skippedGroupIds.size > 0 ? `, ${skippedGroupIds.size} skipped` : ''}`,
+  );
+
+  // Import expenses
+  let expensesImported = 0;
+  let expensesSkipped = 0;
+  const filteredExpenses =
+    skippedGroupIds.size > 0
+      ? activeExpenses.filter((e) => !e.group_id || !skippedGroupIds.has(e.group_id))
+      : activeExpenses;
+  const total = filteredExpenses.length;
+  if (filteredExpenses.length < activeExpenses.length) {
+    log(
+      'info',
+      `Expenses: ${activeExpenses.length} total, ${activeExpenses.length - filteredExpenses.length} filtered out (group not selected), ${total} to process`,
+    );
+  }
+
+  for (let i = 0; i < total; i++) {
+    const swExp = filteredExpenses[i]!;
+    if (i > 0 && i % 100 === 0) {
+      log('info', `Progress: ${i}/${total} expenses processed...`);
+    }
+
+    const expenseId = splitwiseIdToUuid(swExp.id);
+    const existing = await db.expense.findUnique({ where: { id: expenseId } });
+    if (existing) {
+      const groupName = swExp.group_id
+        ? (data.groups.find((g) => g.id === swExp.group_id)?.name ?? 'unknown group')
+        : 'no group';
+      const expDate = new Date(swExp.date).toLocaleDateString('de-DE');
+      log(
+        'warn',
+        `Expense skipped (already exists): "${swExp.description}" [SW #${swExp.id} → ${expenseId}] — ${swExp.cost} ${swExp.currency_code}, ${expDate}, ${groupName}`,
+      );
+      expensesSkipped++;
+      continue;
+    }
+
+    const toCount = new Map<number, number>();
+    for (const r of swExp.repayments) {
+      toCount.set(r.to, (toCount.get(r.to) ?? 0) + 1);
+    }
+    const payerSwId =
+      toCount.size > 0 ? [...toCount.entries()].sort((a, b) => b[1] - a[1])[0]![0] : data.user.id;
+
+    const paidByUserId = userIdMap.get(payerSwId);
+    if (!paidByUserId) {
+      const payerName = data.friends.find((f) => f.id === payerSwId);
+      const groupName = swExp.group_id
+        ? (data.groups.find((g) => g.id === swExp.group_id)?.name ?? 'unknown group')
+        : 'no group';
+      const expDate = new Date(swExp.date).toLocaleDateString('de-DE');
+      log(
+        'error',
+        `Expense skipped (payer "${payerName ? [payerName.first_name, payerName.last_name].filter(Boolean).join(' ') : 'unknown'}" [SW #${payerSwId}] not found): "${swExp.description}" [SW #${swExp.id}] — ${swExp.cost} ${swExp.currency_code}, ${expDate}, ${groupName}`,
+      );
+      expensesSkipped++;
+      continue;
+    }
+
+    // Currencies with no subunits (stored as whole units, not cents)
+    const ZERO_DECIMAL_CURRENCIES = new Set([
+      'VND',
+      'JPY',
+      'KRW',
+      'IDR',
+      'ISK',
+      'HUF',
+      'TWD',
+      'BIF',
+      'CLP',
+      'GNF',
+      'MGA',
+      'PYG',
+      'RWF',
+      'UGX',
+      'VUV',
+      'XAF',
+      'XOF',
+      'XPF',
+    ]);
+    const multiplier = ZERO_DECIMAL_CURRENCIES.has(swExp.currency_code) ? 1 : 100;
+
+    // Reconstruct participants: payer gets positive, debtors get negative
+    const amountCents = Math.round(parseFloat(swExp.cost) * multiplier);
+    const debtorAmounts = new Map<number, number>();
+    for (const r of swExp.repayments) {
+      const debtorId = userIdMap.get(r.from);
+      if (debtorId !== undefined) {
+        debtorAmounts.set(debtorId, Math.round(parseFloat(r.amount) * multiplier));
+      }
+    }
+    const totalOwed = [...debtorAmounts.values()].reduce((a, b) => a + b, 0);
+    const payerShare = amountCents - totalOwed;
+
+    const participants: { userId: number; amount: bigint }[] = [
+      { userId: paidByUserId, amount: BigInt(payerShare) },
+      ...[...debtorAmounts.entries()].map(([userId, amount]) => ({
+        userId,
+        amount: BigInt(-amount),
+      })),
+    ];
+
+    const groupId = swExp.group_id ? groupIdMap.get(swExp.group_id) : null;
+    const category = swExp.category?.name?.toLowerCase() ?? DEFAULT_CATEGORY;
+
+    try {
+      await db.expense.create({
+        data: {
+          id: expenseId,
+          name: swExp.description,
+          category,
+          amount: BigInt(amountCents),
+          currency: swExp.currency_code,
+          splitType: swExp.payment ? SplitType.SETTLEMENT : SplitType.EXACT,
+          expenseDate: new Date(swExp.date),
+          paidBy: paidByUserId,
+          addedBy: currentUserId,
+          groupId: groupId ?? null,
+          expenseParticipants: { create: participants },
+        },
+      });
+      expensesImported++;
+    } catch (err) {
+      const groupName = swExp.group_id
+        ? (data.groups.find((g) => g.id === swExp.group_id)?.name ?? 'unknown group')
+        : 'no group';
+      const expDate = new Date(swExp.date).toLocaleDateString('de-DE');
+      const errMsg = err instanceof Error ? err.message : String(err);
+      log(
+        'error',
+        `Expense failed: "${swExp.description}" [SW #${swExp.id} → ${expenseId}] — ${swExp.cost} ${swExp.currency_code}, ${expDate}, ${groupName}, paid by DB #${paidByUserId}. Error: ${errMsg}`,
+      );
+      expensesSkipped++;
+    }
+  }
+
+  log('success', `Import complete: ${expensesImported} imported, ${expensesSkipped} skipped`);
+  return {
+    usersImported: userIdMap.size - 1,
+    groupsImported: groupIdMap.size,
+    expensesImported,
+    expensesSkipped,
+  };
+}
+
 export async function importUserBalanceFromSplitWise(
   currentUserId: number,
   splitWiseUsers: SplitwiseUser[],
@@ -389,16 +1095,13 @@ export async function importUserBalanceFromSplitWise(
 
   const users = await createUsersFromSplitwise(splitWiseUsers);
 
-  const userMap = users.reduce(
-    (acc, user) => {
-      if (user.email) {
-        acc[user.email] = user;
-      }
+  const userMap = users.reduce<Record<string, User>>((acc, user) => {
+    if (user.email) {
+      acc[user.email] = user;
+    }
 
-      return acc;
-    },
-    {} as Record<string, User>,
-  );
+    return acc;
+  }, {});
 
   const currencyHelperCache: Record<string, ReturnType<typeof getCurrencyHelpers>['toSafeBigInt']> =
     {};
@@ -503,16 +1206,13 @@ export async function importGroupFromSplitwise(
 
   const users = await createUsersFromSplitwise(Object.values(splitwiseUserMap));
 
-  const userMap = users.reduce(
-    (acc, user) => {
-      if (user.email) {
-        acc[user.email] = user;
-      }
+  const userMap = users.reduce<Record<string, User>>((acc, user) => {
+    if (user.email) {
+      acc[user.email] = user;
+    }
 
-      return acc;
-    },
-    {} as Record<string, User>,
-  );
+    return acc;
+  }, {});
 
   const missingGroups = await Promise.all(
     splitWiseGroups.map(async (group) => {

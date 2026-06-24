@@ -12,88 +12,150 @@ import { Checkbox } from '~/components/ui/checkbox';
 import { Input } from '~/components/ui/input';
 import { Separator } from '~/components/ui/separator';
 import { LoadingSpinner } from '~/components/ui/spinner';
+import { ImportLogWindow } from '~/components/Import/ImportLogWindow';
+import { useImportStream } from '~/hooks/useImportStream';
 import { type NextPageWithUser, type SplitwiseGroup, type SplitwiseUser } from '~/types';
 import { api } from '~/utils/api';
 import { withI18nStaticProps } from '~/utils/i18n/server';
 
+interface FullBackupGroup {
+  id: number;
+  name: string;
+  members: unknown[];
+}
+
+type ParsedFile =
+  | { mode: 'balance'; users: SplitwiseUser[]; groups: SplitwiseGroup[] }
+  | {
+      mode: 'full';
+      raw: Record<string, unknown>;
+      expenseCount: number;
+      friendCount: number;
+      groups: FullBackupGroup[];
+    };
+
 const ImportSpliwisePage: NextPageWithUser = () => {
   const { t } = useTranslation();
-  const [usersWithBalance, setUsersWithBalance] = useState<SplitwiseUser[]>([]);
-  const [groups, setGroups] = useState<SplitwiseGroup[]>([]);
-  const [selectedUsers, setSelectedUsers] = useState<Record<string, boolean>>({});
-  const [selectedGroups, setSelectedGroups] = useState<Record<string, boolean>>({});
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [parsed, setParsed] = useState<ParsedFile | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<Record<string, boolean>>({});
+  const [selectedGroups, setSelectedGroups] = useState<Record<number, boolean>>({});
 
   const router = useRouter();
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { files } = event.target;
-
-    const file = files?.[0];
-
+    const file = event.target.files?.[0];
     if (!file) {
       return;
     }
 
     setUploadedFile(file);
+    setParsed(null);
+    setSelectedGroups({});
 
     try {
       const json = JSON.parse(await file.text()) as Record<string, unknown>;
-      const friendsWithOutStandingBalance: SplitwiseUser[] = [];
-      for (const friend of json.friends as Record<string, unknown>[]) {
-        const balance = friend.balance as { currency_code: string; amount: string }[];
-        if (balance.length && 'confirmed' === friend.registration_status) {
-          friendsWithOutStandingBalance.push(friend as unknown as SplitwiseUser);
-        }
+
+      if (json.version && json.users && json.expenses) {
+        toast.error(t('errors.wrong_file_splitpro_on_splitwise'), { duration: 10000 });
+        return;
       }
 
-      setUsersWithBalance(friendsWithOutStandingBalance);
-      setSelectedUsers(
-        friendsWithOutStandingBalance.reduce(
-          (acc, user) => {
-            acc[user.id] = true;
-            return acc;
-          },
-          {} as Record<string, boolean>,
-        ),
-      );
+      const expenses = json.expenses as Record<string, unknown>[] | undefined;
+      const isFullBackup =
+        Array.isArray(expenses) && expenses.length > 0 && 'repayments' in expenses[0]!;
 
-      const _groups = (json.groups as SplitwiseGroup[]).filter(
-        (g) => 0 < g.members.length && 0 !== g.id,
-      );
+      if (isFullBackup) {
+        const activeExpenses = expenses.filter((e) => !e.deleted_at);
+        const friends = (json.friends as Record<string, unknown>[]) ?? [];
+        const groups = ((json.groups as FullBackupGroup[]) ?? []).filter(
+          (g) => 0 !== g.id && g.members.length > 0,
+        );
 
-      setGroups(_groups);
-      setSelectedGroups(
-        _groups.reduce(
-          (acc, group) => {
-            acc[group.id] = true;
-            return acc;
-          },
-          {} as Record<string, boolean>,
-        ),
-      );
+        setParsed({
+          mode: 'full',
+          raw: json,
+          expenseCount: activeExpenses.length,
+          friendCount: friends.length,
+          groups,
+        });
+        setSelectedGroups(Object.fromEntries(groups.map((g) => [g.id, true])));
+      } else {
+        // Legacy balance-only mode
+        const friendsWithBalance: SplitwiseUser[] = [];
+        for (const friend of (json.friends as Record<string, unknown>[]) ?? []) {
+          const balance = friend.balance as { currency_code: string; amount: string }[];
+          if (balance.length && 'confirmed' === friend.registration_status) {
+            friendsWithBalance.push(friend as unknown as SplitwiseUser);
+          }
+        }
+
+        const groups = ((json.groups as SplitwiseGroup[]) ?? []).filter(
+          (g) => 0 < g.members.length && 0 !== g.id,
+        );
+
+        setParsed({ mode: 'balance', users: friendsWithBalance, groups });
+        setSelectedUsers(Object.fromEntries(friendsWithBalance.map((u) => [u.id, true])));
+        setSelectedGroups(Object.fromEntries(groups.map((g) => [g.id, true])));
+      }
     } catch (e) {
       console.error(e);
       toast.error(t('errors.import_failed'));
     }
   };
 
-  const importMutation = api.user.importUsersFromSplitWise.useMutation();
+  const balanceMutation = api.user.importUsersFromSplitWise.useMutation();
+  const { logs, isStreaming, startStream } = useImportStream();
 
-  function onImport() {
-    importMutation.mutate(
-      {
-        usersWithBalance: usersWithBalance.filter((user) => selectedUsers[user.id]),
-        groups: groups.filter((group) => selectedGroups[group.id]),
-      },
-      {
-        onSuccess: () => {
-          toast.success(t('account.import_from_splitwise_details.messages.import_success'));
-          router.push('/balances').catch((err) => console.error(err));
+  async function onImport() {
+    if (!parsed) {
+      return;
+    }
+
+    if ('full' === parsed.mode) {
+      if (!uploadedFile) {
+        return;
+      }
+      const formData = new FormData();
+      formData.append('file', uploadedFile);
+
+      const selected = Object.entries(selectedGroups)
+        .filter(([, v]) => v)
+        .map(([k]) => Number(k));
+      formData.append('selectedGroups', JSON.stringify(selected));
+
+      const outcome = await startStream('/api/import-splitwise-stream', formData);
+
+      if (outcome.ok) {
+        toast.success(
+          `Import abgeschlossen: ${outcome.result.expensesImported} Ausgaben importiert, ${outcome.result.expensesSkipped ?? 0} übersprungen`,
+          { duration: 4000 },
+        );
+      } else {
+        toast.error(t('errors.import_failed'));
+      }
+    } else {
+      balanceMutation.mutate(
+        {
+          usersWithBalance: parsed.users.filter((u) => selectedUsers[u.id]),
+          groups: parsed.groups.filter((g) => selectedGroups[g.id]),
         },
-      },
-    );
+        {
+          onSuccess: () => {
+            toast.success(t('account.import_from_splitwise_details.messages.import_success'));
+            router.push('/balances').catch(console.error);
+          },
+          onError: () => toast.error(t('errors.import_failed')),
+        },
+      );
+    }
   }
+
+  const isPending = balanceMutation.isPending || isStreaming;
+
+  const fullGroups = parsed?.mode === 'full' ? parsed.groups : [];
+  const allSelected = fullGroups.length > 0 && fullGroups.every((g) => selectedGroups[g.id]);
+  const noneSelected = fullGroups.length > 0 && fullGroups.every((g) => !selectedGroups[g.id]);
 
   return (
     <>
@@ -117,17 +179,18 @@ const ImportSpliwisePage: NextPageWithUser = () => {
               variant="ghost"
               className="text-primary px-0 py-0"
               size="sm"
-              disabled={importMutation.isPending || !uploadedFile}
+              disabled={isPending || !parsed || (parsed.mode === 'full' && noneSelected)}
             >
               {t('actions.import')}
             </Button>
           </div>
         </div>
+
         <div className="mt-4 flex items-center gap-4">
           <label htmlFor="splitwise-json" className="w-full cursor-pointer rounded border">
             <div className="flex cursor-pointer px-3 py-[6px]">
               <div className="flex items-center border-r pr-4">
-                <PaperClipIcon className="mr-2 h-4 w-4" />{' '}
+                <PaperClipIcon className="mr-2 h-4 w-4" />
                 <span className="hidden text-sm md:block">
                   {t('account.import_from_splitwise_details.choose_file')}
                 </span>
@@ -148,102 +211,185 @@ const ImportSpliwisePage: NextPageWithUser = () => {
           </label>
           <Button
             onClick={onImport}
-            disabled={!uploadedFile || importMutation.isPending}
+            disabled={!parsed || isPending || (parsed?.mode === 'full' && noneSelected)}
             className="w-[100px]"
             size="sm"
           >
-            {importMutation.isPending ? <LoadingSpinner /> : t('actions.import')}
+            {isPending ? <LoadingSpinner /> : t('actions.import')}
           </Button>
         </div>
-        <div className="mt-4 text-sm text-gray-400">
-          {t('account.import_from_splitwise_details.note')}
-        </div>
 
-        {uploadedFile ? (
-          <>
-            <div className="mt-8 font-semibold">
-              {t('actors.friends')} ({usersWithBalance.length})
+        {parsed?.mode === 'full' && (
+          <div className="mt-6 flex flex-col gap-2 text-sm text-gray-400">
+            <div className="rounded border border-gray-700 p-3 text-gray-300">
+              <div>
+                {t('actors.friends')}: {parsed.friendCount}
+              </div>
+              <div>
+                {t('actors.groups')}: {parsed.groups.length}
+              </div>
+              <div>
+                {parsed.expenseCount} {t('account.import_splitpro_data_details.expenses')}
+              </div>
             </div>
-            {usersWithBalance.length ? (
+
+            {parsed.groups.length > 0 && (
+              <>
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="font-semibold text-gray-200">
+                    {t('actors.groups')} ({parsed.groups.length})
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-gray-400"
+                    onClick={() =>
+                      setSelectedGroups(
+                        Object.fromEntries(parsed.groups.map((g) => [g.id, !allSelected])),
+                      )
+                    }
+                  >
+                    {allSelected ? t('actions.deselect_all') : t('actions.select_all')}
+                  </Button>
+                </div>
+                <div className="mt-2 flex flex-col gap-3">
+                  {parsed.groups.map((group, index) => (
+                    <div key={group.id}>
+                      <div className="flex justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={selectedGroups[group.id] ?? true}
+                            onCheckedChange={(checked) =>
+                              setSelectedGroups({ ...selectedGroups, [group.id]: !!checked })
+                            }
+                          />
+                          <p className="text-gray-200">{group.name}</p>
+                        </div>
+                        <div className="shrink-0 text-sm text-gray-400">
+                          {group.members.length} {t('actors.members')}
+                        </div>
+                      </div>
+                      {index !== parsed.groups.length - 1 && <Separator className="mt-3" />}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {parsed?.mode === 'balance' && uploadedFile && (
+          <>
+            <div className="mt-4 text-sm text-gray-400">
+              {t('account.import_from_splitwise_details.note')}
+            </div>
+            <div className="mt-8 font-semibold">
+              {t('actors.friends')} ({parsed.users.length})
+            </div>
+            {parsed.users.length ? (
               <div className="mt-4 flex flex-col gap-3">
-                {usersWithBalance.map((user, index) => (
-                  <div key={user.id} className="">
-                    <div key={user.id} className="flex items-center justify-between gap-4">
+                {parsed.users.map((user, index) => (
+                  <div key={user.id}>
+                    <div className="flex items-center justify-between gap-4">
                       <div className="flex shrink-0 items-center gap-2">
                         <Checkbox
                           checked={selectedUsers[user.id]}
-                          onCheckedChange={(checked) => {
-                            setSelectedUsers({ ...selectedUsers, [user.id]: checked });
-                          }}
+                          onCheckedChange={(checked) =>
+                            setSelectedUsers({ ...selectedUsers, [user.id]: checked })
+                          }
                         />
-                        <div className="flex">
-                          <p>
-                            {user.first_name}
-                            {user.last_name ? ` ${user.last_name}` : ''}
-                          </p>
-                        </div>
+                        <p>
+                          {user.first_name}
+                          {user.last_name ? ` ${user.last_name}` : ''}
+                        </p>
                       </div>
                       <div className="flex flex-wrap justify-end gap-1">
-                        {user.balance.map((b, index) => (
+                        {user.balance.map((b, i) => (
                           <span
                             key={b.currency_code}
                             className={`text-sm ${0 < Number(b.amount) ? 'text-green-500' : 'text-orange-600'}`}
                           >
                             {b.currency_code} {Math.abs(Number(b.amount)).toFixed(2)}
-                            <span className="text-xs text-gray-300">
-                              {index !== user.balance.length - 1 ? ' + ' : ''}
-                            </span>
+                            {i !== user.balance.length - 1 && (
+                              <span className="text-xs text-gray-300"> + </span>
+                            )}
                           </span>
                         ))}
                       </div>
                     </div>
-                    <div className="mt-3">
-                      {index !== usersWithBalance.length - 1 ? <Separator /> : null}
-                    </div>
+                    {index !== parsed.users.length - 1 && <Separator className="mt-3" />}
                   </div>
                 ))}
               </div>
             ) : null}
+
             <div className="mt-8 font-semibold">
-              {t('actors.groups')} ({groups.length})
+              {t('actors.groups')} ({parsed.groups.length})
             </div>
-            {groups.length ? (
+            {parsed.groups.length ? (
               <div className="mt-4 flex flex-col gap-3">
-                {groups.map((group, index) => (
+                {parsed.groups.map((group, index) => (
                   <div key={group.id}>
                     <div className="flex justify-between gap-3">
                       <div className="flex items-center gap-2">
                         <Checkbox
                           checked={selectedGroups[group.id]}
-                          onCheckedChange={(checked) => {
-                            setSelectedGroups({ ...selectedGroups, [group.id]: checked });
-                          }}
+                          onCheckedChange={(checked) =>
+                            setSelectedGroups({ ...selectedGroups, [group.id]: !!checked })
+                          }
                         />
-                        <div className="flex">
-                          <p>{group.name}</p>
-                        </div>
+                        <p>{group.name}</p>
                       </div>
-                      <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                      <div className="shrink-0 text-sm text-gray-400">
                         {group.members.length} {t('actors.members')}
                       </div>
                     </div>
-                    {index !== groups.length - 1 ? <Separator className="mt-3" /> : null}
+                    {index !== parsed.groups.length - 1 && <Separator className="mt-3" />}
                   </div>
                 ))}
               </div>
             ) : null}
           </>
-        ) : (
-          <div className="mt-20 flex flex-col items-center justify-center gap-4">
-            {t('account.import_from_splitwise_details.follow_to_export_splitwise_data')}
-            <Link href="https://export-splitwise.vercel.app/" target="_blank">
-              <Button>
-                <DownloadCloud className="mr-2 text-gray-800" />
-                {t('account.import_from_splitwise_details.export_splitwise_data_button')}
-              </Button>
-            </Link>
+        )}
+
+        {!uploadedFile && (
+          <div className="mt-10 flex flex-col gap-6 text-sm text-gray-300">
+            <p className="text-center text-gray-400">
+              {t('account.import_from_splitwise_details.two_ways_intro')}
+            </p>
+
+            <div className="rounded border border-gray-700 p-4">
+              <h3 className="font-semibold text-gray-200">
+                {t('account.import_from_splitwise_details.option1_title')}
+              </h3>
+              <p className="mt-1 text-gray-400">
+                {t('account.import_from_splitwise_details.option1_note')}
+              </p>
+              <div className="mt-3 flex justify-center">
+                <Link href="https://export-splitwise.vercel.app/" target="_blank">
+                  <Button>
+                    <DownloadCloud className="mr-2 text-gray-800" />
+                    {t('account.import_from_splitwise_details.export_splitwise_data_button')}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            <div className="rounded border border-gray-700 p-4">
+              <h3 className="font-semibold text-gray-200">
+                {t('account.import_from_splitwise_details.option2_title')}
+              </h3>
+              <p className="mt-1 text-gray-400">
+                {t('account.import_from_splitwise_details.option2_note')}
+              </p>
+              <p className="mt-2 text-gray-400">
+                {t('account.import_from_splitwise_details.option2_instructions')}
+              </p>
+            </div>
           </div>
         )}
+
+        <ImportLogWindow entries={logs} isStreaming={isStreaming} />
       </MainLayout>
     </>
   );

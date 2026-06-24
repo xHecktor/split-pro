@@ -50,7 +50,13 @@
         "import_success": "आयात सफलतापूर्वक सम्पन्न भयो"
       },
       "no_file_chosen": "कुनै फाइल छानिएको छैन",
-      "note": "द्रष्टव्य: हाल यसले साथीहरू र समूहहरू आयात गर्न मात्र समर्थन गर्दछ। यसले लेनदेनहरू (transactions) आयात गर्ने छैन। हामी यसमा काम गरिरहेका छौं।"
+      "note": "द्रष्टव्य: हाल यसले साथीहरू र समूहहरू आयात गर्न मात्र समर्थन गर्दछ। यसले लेनदेनहरू (transactions) आयात गर्ने छैन। हामी यसमा काम गरिरहेका छौं।",
+      "two_ways_intro": "तपाईंको Splitwise डाटा निर्यात गर्ने दुई तरिकाहरू छन्:",
+      "option1_title": "1. बाह्य लिंक मार्फत ब्यालेन्स निर्यात",
+      "option1_note": "ब्यालेन्स मात्र निर्यात हुन्छ — व्यक्तिगत खर्चहरू होइन।",
+      "option2_title": "2. Splitwise Pro सँग पूर्ण निर्यात",
+      "option2_note": "सबै समूहहरू र सबै व्यक्तिगत खर्चहरू निर्यात हुन्छन्।",
+      "option2_instructions": "Splitwise वेबसाइटमा ⚙️ → खाता सेटिङहरू → उन्नत सुविधाहरू → \"पूर्ण ब्याकअप डाउनलोड गर्नुहोस् (JSON)\" मा जानुहोस्।"
     },
     "logout": "लगआउट",
     "messages": {
@@ -72,7 +78,20 @@
     },
     "support_us": "हामीलाई सहयोग गर्नुहोस्",
     "title": "खाता",
-    "write_review": "समीक्षा लेख्नुहोस्"
+    "write_review": "समीक्षा लेख्नुहोस्",
+    "import_splitpro_data": "SplitPro डाटा आयात गर्नुहोस्",
+    "import_splitpro_data_details": {
+      "note": "निम्नलिखित डाटा आयात गरिनेछ। डुप्लिकेट नहोस् भनेर खर्चहरू ID द्वारा मिलाइनेछन्।",
+      "expenses": "खर्चहरू",
+      "mode_merge": "मर्ज गर्नुहोस्",
+      "mode_merge_description": "नयाँ डाटा थपिनेछ, अवस्थित खर्चहरू अपरिवर्तित रहनेछन्।",
+      "mode_restore": "पुनर्स्थापना गर्नुहोस्",
+      "mode_restore_description": "तपाईंका सबै अवस्थित खर्चहरू र समूहहरू मेटिनेछन् र ब्याकअपद्वारा प्रतिस्थापन हुनेछन्।",
+      "mode_restore_warning": "यो कार्य पूर्ववत गर्न सकिँदैन।",
+      "messages": {
+        "import_success": "{{expenses}} खर्च र {{groups}} समूह सफलतापूर्वक आयात भयो"
+      }
+    }
   },
   "actions": {
     "add_expense": "खर्च थप्नुहोस्",
@@ -92,6 +111,8 @@
     "next": "अर्को",
     "reconnect": "पुन: जडान गर्नुहोस्",
     "save": "बचत गर्नुहोस्",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all",
     "settle_up": "हिसाब मिलान गर्नुहोस्",
     "submit": "पेश गर्नुहोस्"
   },
@@ -180,7 +201,10 @@
     "unsubscribe_error": "अनसबस्क्राइब गर्दा त्रुटि",
     "upload_failed": "अपलोड असफल भयो",
     "uploading_error": "अपलोड गर्दा त्रुटि",
-    "valid_email": "कृपया मान्य इमेल राख्नुहोस्"
+    "valid_email": "कृपया मान्य इमेल राख्नुहोस्",
+    "import_splitpro_failed": "SplitPro डाटा आयात गर्न असफल भयो। कृपया सुनिश्चित गर्नुहोस् कि तपाईंले मान्य SplitPro निर्यात फाइल अपलोड गर्नुभयो।",
+    "wrong_file_splitpro_on_splitwise": "This is a SplitPro export file. Please use the SplitPro import page.",
+    "wrong_file_splitwise_on_splitpro": "This is a Splitwise export file. Please use the Splitwise import page."
   },
   "expense_details": {
     "add_expense": "खर्च थप्नुहोस्",

@@ -52,7 +52,13 @@
         "import_success": "Succesvol geïmporteerd"
       },
       "no_file_chosen": "Geen bestand gekozen",
-      "note": "Info: Momenteel importeert het enkel vrienden en groepen. Het importeert nog geen transacties. We werken er aan."
+      "note": "Info: Momenteel importeert het enkel vrienden en groepen. Het importeert nog geen transacties. We werken er aan.",
+      "two_ways_intro": "Er zijn twee manieren om je Splitwise-gegevens te exporteren:",
+      "option1_title": "1. Saldo-export via externe link",
+      "option1_note": "Hierbij worden alleen saldi geëxporteerd — geen individuele uitgaven.",
+      "option2_title": "2. Volledige export met Splitwise Pro",
+      "option2_note": "Hierbij worden alle groepen met alle individuele uitgaven geëxporteerd.",
+      "option2_instructions": "Ga op de Splitwise-website naar ⚙️ → Accountinstellingen → Geavanceerde functies → \"Volledige back-up downloaden (JSON)\"."
     },
     "logout": "Uitloggen",
     "messages": {
@@ -74,7 +80,20 @@
     },
     "support_us": "Sponsor ons",
     "title": "Account",
-    "write_review": "Schrijf een recensie"
+    "write_review": "Schrijf een recensie",
+    "import_splitpro_data": "SplitPro-gegevens importeren",
+    "import_splitpro_data_details": {
+      "note": "De volgende gegevens worden geïmporteerd. Uitgaven worden gekoppeld op ID om duplicaten te voorkomen.",
+      "expenses": "uitgaven",
+      "mode_merge": "Samenvoegen",
+      "mode_merge_description": "Nieuwe gegevens worden toegevoegd, bestaande uitgaven blijven ongewijzigd.",
+      "mode_restore": "Herstellen",
+      "mode_restore_description": "Al je bestaande uitgaven en groepen worden verwijderd en vervangen door de back-up.",
+      "mode_restore_warning": "Deze actie kan niet ongedaan worden gemaakt.",
+      "messages": {
+        "import_success": "{{expenses}} uitgaven en {{groups}} groepen succesvol geïmporteerd"
+      }
+    }
   },
   "actions": {
     "add_expense": "Uitgave toevoegen",
@@ -94,6 +113,8 @@
     "next": "Volgende",
     "reconnect": "Opnieuw verbinden",
     "save": "Opslaan",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all",
     "settle_up": "Vereffenen",
     "submit": "Indienen"
   },
@@ -182,7 +203,10 @@
     "unsubscribe_error": "Fout bij het afmelden van meldingen",
     "upload_failed": "Bestand uploaden mislukt",
     "uploading_error": "Fout bij uploaden bestand",
-    "valid_email": "Voer een geldig e-mailadres in"
+    "valid_email": "Voer een geldig e-mailadres in",
+    "import_splitpro_failed": "Importeren van SplitPro-gegevens mislukt. Zorg ervoor dat u een geldig SplitPro-exportbestand hebt geüpload.",
+    "wrong_file_splitpro_on_splitwise": "This is a SplitPro export file. Please use the SplitPro import page.",
+    "wrong_file_splitwise_on_splitpro": "This is a Splitwise export file. Please use the Splitwise import page."
   },
   "expense_details": {
     "add_expense": "Uitgave toevoegen",

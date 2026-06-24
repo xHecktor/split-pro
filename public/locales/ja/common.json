@@ -12,6 +12,40 @@
     "download_app_details": {
       "download_as_pwa": "SplitProをPWAとしてホーム画面に追加できます.",
       "title": "アプリをダウンロード"
+    },
+    "import_splitpro_data": "SplitProデータをインポート",
+    "import_splitpro_data_details": {
+      "note": "以下のデータがインポートされます。重複を避けるため、支出はIDで照合されます。",
+      "expenses": "件の支出",
+      "mode_merge": "マージ",
+      "mode_merge_description": "新しいデータが追加され、既存の支出は変更されません。",
+      "mode_restore": "復元",
+      "mode_restore_description": "既存のすべての支出とグループが削除され、バックアップに置き換えられます。",
+      "mode_restore_warning": "この操作は元に戻せません。",
+      "messages": {
+        "import_success": "{{expenses}} 件の支出と {{groups}} 件のグループが正常にインポートされました"
+      }
+    },
+    "import_from_splitwise_details": {
+      "choose_file": "ファイルを選択",
+      "export_splitwise_data_button": "Splitwiseデータをエクスポート",
+      "follow_to_export_splitwise_data": "Splitwiseデータをエクスポートするにはこのリンクへ",
+      "messages": {
+        "import_success": "インポート成功"
+      },
+      "no_file_chosen": "ファイル未選択",
+      "note": "注意: 現在は友達とグループのみインポートされます。取引はインポートされません。",
+      "two_ways_intro": "Splitwiseデータをエクスポートするには2つの方法があります：",
+      "option1_title": "1. 外部リンクによる残高エクスポート",
+      "option1_note": "残高のみがエクスポートされます（個別の支出は含まれません）。",
+      "option2_title": "2. Splitwise Proによる完全エクスポート",
+      "option2_note": "すべてのグループとすべての個別支出がエクスポートされます。",
+      "option2_instructions": "SplitwiseのWebサイトで ⚙️ → アカウント設定 → 高度な機能 → 「完全なバックアップをダウンロード（JSON）」を選択してください。"
     }
+  },
+  "errors": {
+    "import_splitpro_failed": "SplitProデータのインポートに失敗しました。有効なSplitProエクスポートファイルをアップロードしてください。",
+    "wrong_file_splitpro_on_splitwise": "This is a SplitPro export file. Please use the SplitPro import page.",
+    "wrong_file_splitwise_on_splitpro": "This is a Splitwise export file. Please use the Splitwise import page."
   }
 }

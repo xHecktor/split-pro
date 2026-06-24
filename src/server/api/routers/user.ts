@@ -1,3 +1,4 @@
+import { SplitType } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { type User } from 'next-auth';
 import { z } from 'zod';
@@ -19,10 +20,12 @@ import {
   sendPushNotificationToUsers,
 } from '../services/notificationService';
 import {
-  getCompleteFriendsDetails,
-  getCompleteGroupDetails,
+  getFullExportData,
+  importFromSplitwisePro,
   importGroupFromSplitwise,
+  importSplitProData,
   importUserBalanceFromSplitWise,
+  restoreSplitProData,
 } from '../services/splitService';
 
 export const userRouter = createTRPCRouter({
@@ -399,12 +402,110 @@ export const userRouter = createTRPCRouter({
 
   downloadData: protectedProcedure.mutation(async ({ ctx }) => {
     const { user } = ctx.session;
-
-    const friends = await getCompleteFriendsDetails(user.id);
-    const groups = await getCompleteGroupDetails(user.id);
-
-    return { friends, groups };
+    return getFullExportData(user.id);
   }),
+
+  importSplitProData: protectedProcedure
+    .input(
+      z.object({
+        mode: z.enum(['merge', 'restore']).default('merge'),
+        version: z.number(),
+        exportedAt: z.string(),
+        exportedByUserId: z.number(),
+        users: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string().nullable(),
+            email: z.string().nullable(),
+          }),
+        ),
+        groups: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+            publicId: z.string(),
+            defaultCurrency: z.string().nullable(),
+            createdAt: z.string(),
+            members: z.array(z.object({ userId: z.number() })),
+          }),
+        ),
+        expenses: z.array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            category: z.string(),
+            amount: z.string(),
+            currency: z.string(),
+            splitType: z.nativeEnum(SplitType),
+            expenseDate: z.string(),
+            paidByUserId: z.number(),
+            addedByUserId: z.number(),
+            groupId: z.number().nullable(),
+            participants: z.array(
+              z.object({
+                userId: z.number(),
+                amount: z.string(),
+              }),
+            ),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { mode, ...data } = input;
+      if (mode === 'restore') {
+        return restoreSplitProData(
+          ctx.session.user.id,
+          data as unknown as Parameters<typeof restoreSplitProData>[1],
+        );
+      }
+      return importSplitProData(
+        ctx.session.user.id,
+        data as unknown as Parameters<typeof importSplitProData>[1],
+      );
+    }),
+
+  importFromSplitwisePro: protectedProcedure
+    .input(
+      z.object({
+        user: z.object({
+          id: z.number(),
+          email: z.string(),
+          first_name: z.string(),
+          last_name: z.string().optional(),
+        }),
+        friends: z.array(
+          z.object({
+            id: z.number(),
+            first_name: z.string(),
+            last_name: z.string().nullable().optional(),
+            email: z.string().nullable().optional(),
+          }),
+        ),
+        groups: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+            members: z.array(z.object({ id: z.number() })),
+          }),
+        ),
+        expenses: z.array(
+          z.object({
+            id: z.number(),
+            description: z.string(),
+            cost: z.string(),
+            currency_code: z.string(),
+            date: z.string(),
+            group_id: z.number().nullable(),
+            payment: z.boolean(),
+            deleted_at: z.string().nullable(),
+            category: z.object({ id: z.number(), name: z.string() }).nullable().optional(),
+            repayments: z.array(z.object({ from: z.number(), to: z.number(), amount: z.string() })),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => importFromSplitwisePro(ctx.session.user.id, input)),
 
   importUsersFromSplitWise: protectedProcedure
     .input(

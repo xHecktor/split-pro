@@ -45,7 +45,13 @@
         "import_success": "Επιτυχής εισαγωγή"
       },
       "no_file_chosen": "Δεν επιλέχθηκε αρχείο",
-      "note": "Σημείωση: Αυτή τη στιγμή υποστηρίζεται μόνο η εισαγωγή φίλων και γκρουπ. Δεν θα εισαχθούν συναλλαγές. Εργαζόμαστε πάνω σε αυτό."
+      "note": "Σημείωση: Αυτή τη στιγμή υποστηρίζεται μόνο η εισαγωγή φίλων και γκρουπ. Δεν θα εισαχθούν συναλλαγές. Εργαζόμαστε πάνω σε αυτό.",
+      "two_ways_intro": "Υπάρχουν δύο τρόποι για να εξάγετε τα δεδομένα σας από το Splitwise:",
+      "option1_title": "1. Εξαγωγή υπολοίπων μέσω εξωτερικού συνδέσμου",
+      "option1_note": "Εξάγονται μόνο τα υπόλοιπα — όχι μεμονωμένα έξοδα.",
+      "option2_title": "2. Πλήρης εξαγωγή με Splitwise Pro",
+      "option2_note": "Εξάγονται όλες οι ομάδες με όλα τα μεμονωμένα έξοδα.",
+      "option2_instructions": "Μεταβείτε στον ιστότοπο του Splitwise → ⚙️ → Ρυθμίσεις λογαριασμού → Προηγμένες λειτουργίες → \"Λήψη πλήρους αντιγράφου ασφαλείας (JSON)\"."
     },
     "logout": "Αποσύνδεση",
     "messages": {
@@ -67,7 +73,20 @@
     },
     "support_us": "Υποστηρίξτε μας",
     "title": "Λογαριασμός",
-    "write_review": "Γράψτε μία αξιολόγηση"
+    "write_review": "Γράψτε μία αξιολόγηση",
+    "import_splitpro_data": "Εισαγωγή δεδομένων SplitPro",
+    "import_splitpro_data_details": {
+      "note": "Τα παρακάτω δεδομένα θα εισαχθούν. Τα έξοδα θα αντιστοιχιστούν με βάση το ID για να αποφευχθούν διπλότυπα.",
+      "expenses": "έξοδα",
+      "mode_merge": "Συγχώνευση",
+      "mode_merge_description": "Τα νέα δεδομένα θα προστεθούν, τα υπάρχοντα έξοδα παραμένουν αμετάβλητα.",
+      "mode_restore": "Επαναφορά",
+      "mode_restore_description": "Όλα τα υπάρχοντα έξοδα και οι ομάδες σας θα διαγραφούν και θα αντικατασταθούν από το αντίγραφο ασφαλείας.",
+      "mode_restore_warning": "Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.",
+      "messages": {
+        "import_success": "Εισήχθησαν επιτυχώς {{expenses}} έξοδα και {{groups}} ομάδες"
+      }
+    }
   },
   "actions": {
     "add_expense": "Προσθήκη εξόδου",
@@ -122,5 +141,10 @@
         }
       }
     }
+  },
+  "errors": {
+    "import_splitpro_failed": "Αποτυχία εισαγωγής δεδομένων SplitPro. Βεβαιωθείτε ότι ανεβάσατε έγκυρο αρχείο εξαγωγής SplitPro.",
+    "wrong_file_splitpro_on_splitwise": "This is a SplitPro export file. Please use the SplitPro import page.",
+    "wrong_file_splitwise_on_splitpro": "This is a Splitwise export file. Please use the Splitwise import page."
   }
 }

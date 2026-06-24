@@ -6,6 +6,40 @@
         "language_changed": "Gjuha u ndryshua me sukses"
       },
       "placeholder": "Zgjidhni gjuhën"
+    },
+    "import_splitpro_data": "Importo të dhënat SplitPro",
+    "import_splitpro_data_details": {
+      "note": "Të dhënat e mëposhtme do të importohen. Shpenzimet do të përputhen sipas ID-së për të shmangur dublikatat.",
+      "expenses": "shpenzime",
+      "mode_merge": "Bashko",
+      "mode_merge_description": "Të dhënat e reja do të shtohen, shpenzimet ekzistuese do të mbeten të pandryshuara.",
+      "mode_restore": "Rivendos",
+      "mode_restore_description": "Të gjitha shpenzimet dhe grupet tuaja ekzistuese do të fshihen dhe do të zëvendësohen nga kopja rezervë.",
+      "mode_restore_warning": "Ky veprim nuk mund të zhbëhet.",
+      "messages": {
+        "import_success": "U importuan me sukses {{expenses}} shpenzime dhe {{groups}} grupe"
+      }
+    },
+    "import_from_splitwise_details": {
+      "choose_file": "Zgjidh skedarin",
+      "export_splitwise_data_button": "Eksporto të dhënat Splitwise",
+      "follow_to_export_splitwise_data": "Ndiqni këtë lidhëje për të eksportuar të dhënat Splitwise",
+      "messages": {
+        "import_success": "Importimi u krye me sukses"
+      },
+      "no_file_chosen": "Asnjë skedar i zgjedhur",
+      "note": "Shënim: Aktualisht importohen vetëm miqtë dhe grupet. Transaksionet nuk importohen.",
+      "two_ways_intro": "Ka dy mënyra për të eksportuar të dhënat tuaja nga Splitwise:",
+      "option1_title": "1. Eksport i bilanceve përmes një linku të jashtëm",
+      "option1_note": "Eksportohen vetëm bilancet — jo shpenzimet individuale.",
+      "option2_title": "2. Eksport i plotë me Splitwise Pro",
+      "option2_note": "Eksportohen të gjitha grupet me të gjitha shpenzimet individuale.",
+      "option2_instructions": "Shkoni në faqen e Splitwise → ⚙️ → Cilësimet e llogarisë → Veçoritë e avancuara → \"Shkarko kopjen rezervë të plotë (JSON)\"."
     }
+  },
+  "errors": {
+    "import_splitpro_failed": "Dështoi importimi i të dhënave SplitPro. Sigurohuni që keni ngarkuar një skedar të vlefshëm të eksportimit SplitPro.",
+    "wrong_file_splitpro_on_splitwise": "This is a SplitPro export file. Please use the SplitPro import page.",
+    "wrong_file_splitwise_on_splitpro": "This is a Splitwise export file. Please use the Splitwise import page."
   }
 }

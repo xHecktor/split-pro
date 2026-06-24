@@ -52,7 +52,13 @@
         "import_success": "Importação realizada"
       },
       "no_file_chosen": "Nenhum arquivo selecionado",
-      "note": "Aviso: Atualmente só é possível importar amigos e grupos. Transações não serão importadas. Estamos trabalhando nisso."
+      "note": "Aviso: Atualmente só é possível importar amigos e grupos. Transações não serão importadas. Estamos trabalhando nisso.",
+      "two_ways_intro": "Existem duas formas de exportar seus dados do Splitwise:",
+      "option1_title": "1. Exportação de saldos via link externo",
+      "option1_note": "Apenas saldos são exportados — sem despesas individuais.",
+      "option2_title": "2. Exportação completa com Splitwise Pro",
+      "option2_note": "Todos os grupos com todas as despesas individuais são exportados.",
+      "option2_instructions": "Acesse o site do Splitwise → ⚙️ → Configurações da conta → Recursos avançados → \"Baixar backup completo (JSON)\"."
     },
     "logout": "Fazer logout",
     "messages": {
@@ -74,7 +80,20 @@
     },
     "support_us": "Nos patrocine",
     "title": "Conta",
-    "write_review": "Escreva uma avaliação"
+    "write_review": "Escreva uma avaliação",
+    "import_splitpro_data": "Importar dados do SplitPro",
+    "import_splitpro_data_details": {
+      "note": "Os dados a seguir serão importados. As despesas serão correspondidas por ID para evitar duplicatas.",
+      "expenses": "despesas",
+      "mode_merge": "Mesclar",
+      "mode_merge_description": "Novos dados serão adicionados, as despesas existentes permanecerão inalteradas.",
+      "mode_restore": "Restaurar",
+      "mode_restore_description": "Todas as suas despesas e grupos existentes serão excluídos e substituídos pelo backup.",
+      "mode_restore_warning": "Esta ação não pode ser desfeita.",
+      "messages": {
+        "import_success": "{{expenses}} despesas e {{groups}} grupos importados com sucesso"
+      }
+    }
   },
   "actions": {
     "add_expense": "Adicionar despesa",
@@ -94,6 +113,8 @@
     "next": "Próxima",
     "reconnect": "Reconectar",
     "save": "Salvar",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all",
     "settle_up": "Quitar despesas",
     "submit": "Enviar"
   },
@@ -182,7 +203,10 @@
     "unsubscribe_error": "Erro ao desinscrever-se das notificações",
     "upload_failed": "Falha ao enviar arquivo",
     "uploading_error": "Erro ao enviar arquivo",
-    "valid_email": "Insira um e-mail válido"
+    "valid_email": "Insira um e-mail válido",
+    "import_splitpro_failed": "Falha ao importar dados do SplitPro. Por favor, certifique-se de ter enviado um arquivo de exportação SplitPro válido.",
+    "wrong_file_splitpro_on_splitwise": "This is a SplitPro export file. Please use the SplitPro import page.",
+    "wrong_file_splitwise_on_splitpro": "This is a Splitwise export file. Please use the Splitwise import page."
   },
   "expense_details": {
     "add_expense": "Adicionar despesa",

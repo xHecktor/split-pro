@@ -41,7 +41,13 @@
         "import_success": "Import ból úspešný"
       },
       "no_file_chosen": "Žiaden súbor nie je vybraný",
-      "note": "Poznámka: Aktuálne podporujeme len import priateľov a skupín. Neimportuje to žiadne transakcie. Pracujeme na tom."
+      "note": "Poznámka: Aktuálne podporujeme len import priateľov a skupín. Neimportuje to žiadne transakcie. Pracujeme na tom.",
+      "two_ways_intro": "Existujú dva spôsoby exportu dát zo Splitwise:",
+      "option1_title": "1. Export zostatkov cez externý odkaz",
+      "option1_note": "Exportujú sa iba zostatky — žiadne jednotlivé výdavky.",
+      "option2_title": "2. Kompletný export so Splitwise Pro",
+      "option2_note": "Exportujú sa všetky skupiny so všetkými jednotlivými výdavkami.",
+      "option2_instructions": "Na webe Splitwise prejdite na ⚙️ → Nastavenia účtu → Pokročilé funkcie → „Stiahnúť kompletnú zálohu (JSON)“."
     },
     "logout": "Odhlásiť sa",
     "messages": {
@@ -63,7 +69,20 @@
     },
     "support_us": "Sponzorujte nás",
     "title": "Účet",
-    "write_review": "Napíšte recenziu"
+    "write_review": "Napíšte recenziu",
+    "import_splitpro_data": "Importovať dáta SplitPro",
+    "import_splitpro_data_details": {
+      "note": "Nasledujúce údaje budú importované. Výdavky budú porovnané podľa ID, aby sa predišlo duplikátom.",
+      "expenses": "výdavky",
+      "mode_merge": "Zlúčiť",
+      "mode_merge_description": "Nové údaje budú pridané, existujúce výdavky zostanú nezmenené.",
+      "mode_restore": "Obnoviť",
+      "mode_restore_description": "Všetky vaše existujúce výdavky a skupiny budú vymazané a nahradené zálohou.",
+      "mode_restore_warning": "Túto akciu nie je možné vrátiť späť.",
+      "messages": {
+        "import_success": "Úspešne importovaných {{expenses}} výdavkov a {{groups}} skupín"
+      }
+    }
   },
   "actions": {
     "add_expense": "Pridať výdavok",
@@ -83,6 +102,8 @@
     "next": "Ďalšie",
     "reconnect": "Znovu sa pripojiť",
     "save": "Uložiť",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all",
     "settle_up": "Vyrovnať sa",
     "submit": "Odoslať"
   },
@@ -160,7 +181,10 @@
     "unsubscribe_error": "Chyba pri odhlásení sa z odberu upozornení",
     "upload_failed": "Zlyhalo nahrávanie súboru",
     "uploading_error": "Chyba pri nahrávaní súboru",
-    "valid_email": "Zadajte platný e-mail"
+    "valid_email": "Zadajte platný e-mail",
+    "import_splitpro_failed": "Import dát SplitPro zlyhal. Uistite sa, že ste nahrali platný exportný súbor SplitPro.",
+    "wrong_file_splitpro_on_splitwise": "This is a SplitPro export file. Please use the SplitPro import page.",
+    "wrong_file_splitwise_on_splitpro": "This is a Splitwise export file. Please use the Splitwise import page."
   },
   "expense_details": {
     "add_expense": "Pridať výdavok",
