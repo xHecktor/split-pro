@@ -50,11 +50,17 @@ export const RenameFriend: React.FC<{
 
   return (
     <div className="flex items-center gap-2">
-      <Input value={name} onChange={handleNameChange} placeholder={t('balances.rename.placeholder')} />
+      <Input
+        value={name}
+        onChange={handleNameChange}
+        placeholder={t('balances.rename.placeholder')}
+      />
       <Button
         size="sm"
         onClick={handleSaveClick}
-        disabled={'' === name.trim() || name.trim() === currentName || renameFriendMutation.isPending}
+        disabled={
+          '' === name.trim() || name.trim() === currentName || renameFriendMutation.isPending
+        }
       >
         {t('balances.rename.save')}
       </Button>

@@ -31,7 +31,9 @@ export const MergeLocalFriend: React.FC<{
 
   const handleMerge = useCallback(async () => {
     const trimmed = email.trim().toLowerCase();
-    if (!trimmed) return;
+    if (!trimmed) {
+      return;
+    }
 
     try {
       await mergeMutation.mutateAsync({ localFriendId: friendId, registeredUserEmail: trimmed });
@@ -55,7 +57,11 @@ export const MergeLocalFriend: React.FC<{
       />
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogTrigger asChild>
-          <Button size="sm" variant="destructive" disabled={!isValidEmail || mergeMutation.isPending}>
+          <Button
+            size="sm"
+            variant="destructive"
+            disabled={!isValidEmail || mergeMutation.isPending}
+          >
             {t('balances.merge.button')}
           </Button>
         </AlertDialogTrigger>
@@ -72,7 +78,9 @@ export const MergeLocalFriend: React.FC<{
           <AlertDialogFooter>
             <AlertDialogCancel>{t('actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => { void handleMerge(); }}
+              onClick={() => {
+                void handleMerge();
+              }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {t('balances.merge.confirm_button')}

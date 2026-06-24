@@ -109,10 +109,7 @@ const FriendPage: NextPageWithUser = ({ user }) => {
                         <p className="text-muted-foreground mt-1 mb-2 text-sm">
                           {t('balances.merge.description')}
                         </p>
-                        <MergeLocalFriend
-                          friendId={_friendId}
-                          friendName={friendQuery.data.name}
-                        />
+                        <MergeLocalFriend friendId={_friendId} friendName={friendQuery.data.name} />
                       </div>
                     </>
                   ) : null}

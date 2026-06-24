@@ -421,7 +421,7 @@ export const userRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       // Only allow renaming users the current user has shared an expense with.
       // Using ExpenseParticipant instead of BalanceView so this works even after settle-up
-      // or when the friend was just added but no expense exists yet.
+      // Or when the friend was just added but no expense exists yet.
       const sharedExpense = await db.expense.findFirst({
         where: {
           deletedBy: null,
@@ -508,7 +508,10 @@ export const userRouter = createTRPCRouter({
       }
 
       if (0 === registeredUser.accounts.length && !registeredUser.emailVerified) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Target user is not a registered user' });
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Target user is not a registered user',
+        });
       }
 
       if (registeredUser.id === ctx.session.user.id) {
@@ -528,7 +531,10 @@ export const userRouter = createTRPCRouter({
             )
         `;
 
-        await tx.expenseParticipant.updateMany({ where: { userId: oldId }, data: { userId: newId } });
+        await tx.expenseParticipant.updateMany({
+          where: { userId: oldId },
+          data: { userId: newId },
+        });
 
         await tx.expense.updateMany({ where: { paidBy: oldId }, data: { paidBy: newId } });
         await tx.expense.updateMany({ where: { addedBy: oldId }, data: { addedBy: newId } });
@@ -563,7 +569,10 @@ export const userRouter = createTRPCRouter({
           UPDATE "public"."FriendDefaultSplit" SET "userBId" = ${newId} WHERE "userBId" = ${oldId}
         `;
 
-        await tx.expenseNote.updateMany({ where: { createdById: oldId }, data: { createdById: newId } });
+        await tx.expenseNote.updateMany({
+          where: { createdById: oldId },
+          data: { createdById: newId },
+        });
 
         await tx.user.delete({ where: { id: oldId } });
       });
