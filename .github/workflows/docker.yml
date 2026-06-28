@@ -1,12 +1,9 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Image (dev)
 
 on:
   push:
     branches:
-      - main
-      - claude/magical-fermat-uzzvmc
-  release:
-    types: [published]
+      - dev
 
 permissions:
   contents: read
@@ -34,10 +31,7 @@ jobs:
         with:
           images: xhecktor/splitpro
           tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.event_name == 'release' }}
+            type=raw,value=dev
 
       - name: Build and push
         uses: docker/build-push-action@v6
